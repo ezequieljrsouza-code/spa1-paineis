@@ -1,973 +1,1063 @@
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Auditoria de Carrinhos SPA1</title>
+  <title>Painéis de Auditoria</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #002961;
-      --primary-2: #06418f;
-      --bg: #f3f6fb;
-      --card: #ffffff;
-      --text: #132033;
-      --muted: #6b7280;
-      --green: #18a058;
-      --red: #e5484d;
-      --orange: #f59e0b;
-      --blue: #2563eb;
-      --shadow: 0 16px 40px rgba(0, 41, 97, .12);
-      --shadow-hover: 0 22px 55px rgba(0, 41, 97, .22);
-      --radius: 22px;
+      --primary:   #002961;
+      --primary2:  #06418f;
+      --primary3:  #1a56db;
+      --accent:    #60a5fa;
+      --bg:        #eef3fb;
+      --card:      #ffffff;
+      --text:      #0f172a;
+      --muted:     #64748b;
+      --green:     #16a34a;
+      --red:       #dc2626;
+      --orange:    #d97706;
+      --shadow:    0 4px 18px rgba(0,41,97,.11);
+      --shadow2:   0 10px 36px rgba(0,41,97,.18);
+      --radius:    14px;
     }
-
-    * {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(0, 41, 97, .13), transparent 34%),
-        linear-gradient(135deg, #eef4ff 0%, #f8fafc 52%, #eaf0f8 100%);
       min-height: 100vh;
     }
 
-    .app {
-      width: min(1480px, 96vw);
-      margin: 0 auto;
-      padding: 22px 0 36px;
-    }
-
-    .topbar {
-      background: linear-gradient(135deg, var(--primary), #001936);
-      color: #fff;
-      border-radius: 26px;
-      padding: 24px;
-      display: grid;
-      grid-template-columns: 1.4fr .9fr;
-      gap: 18px;
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .topbar::after {
-      content: "";
-      position: absolute;
-      inset: -40% -12% auto auto;
-      width: 380px;
-      height: 380px;
-      background: rgba(255,255,255,.08);
-      border-radius: 50%;
-    }
-
-    .brand {
-      position: relative;
-      z-index: 1;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: clamp(24px, 3vw, 42px);
-      letter-spacing: -.04em;
-      line-height: 1.05;
-    }
-
-    .brand p {
-      margin: 10px 0 0;
-      color: rgba(255,255,255,.82);
-      font-size: 15px;
-    }
-
-    .actions {
-      position: relative;
-      z-index: 1;
+    /* ─── TAB NAV ─────────────────────────────────── */
+    .tab-nav {
+      background: var(--primary);
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: flex-end;
+      align-items: stretch;
+      overflow-x: auto;
+      padding: 0 20px;
+      gap: 2px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      scrollbar-width: none;
     }
+    .tab-nav::-webkit-scrollbar { display: none; }
 
-    .upload-label,
-    button {
-      border: 0;
-      cursor: pointer;
-      border-radius: 15px;
-      font-weight: 800;
-      font-size: 14px;
-      padding: 13px 16px;
-      background: #fff;
-      color: var(--primary);
-      box-shadow: 0 10px 25px rgba(0,0,0,.13);
-      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
-      display: inline-flex;
+    .tab-nav-brand {
+      display: flex;
       align-items: center;
       gap: 9px;
-      white-space: nowrap;
-    }
-
-    .upload-label:hover,
-    button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 16px 35px rgba(0,0,0,.18);
-      filter: brightness(1.03);
-    }
-
-    .upload-label input {
-      display: none;
-    }
-
-    .btn-primary {
-      background: var(--primary-2);
       color: #fff;
-      border: 1px solid rgba(255,255,255,.22);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      white-space: nowrap;
+      padding: 0 20px 0 4px;
+      border-right: 1px solid rgba(255,255,255,.18);
+      margin-right: 8px;
     }
 
-    .status {
-      width: 100%;
-      text-align: right;
-      font-size: 12px;
-      color: rgba(255,255,255,.78);
-      min-height: 17px;
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,.68);
+      padding: 15px 18px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
+    .tab-btn:hover  { color: #fff; background: rgba(255,255,255,.09); }
+    .tab-btn.active { color: #fff; border-bottom-color: var(--accent); background: rgba(255,255,255,.12); }
 
-    .dashboard {
-      margin-top: 18px;
-    }
+    .tab-panel        { display: none; padding: 20px; max-width: 1700px; margin: 0 auto; }
+    .tab-panel.active { display: block; }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
+    /* ─── PANEL TOPBAR ────────────────────────────── */
+    .panel-topbar {
+      background: linear-gradient(135deg, var(--primary) 0%, #001a45 100%);
+      border-radius: 16px;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-bottom: 16px;
-    }
-
-    .card {
-      background: rgba(255,255,255,.92);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(0, 41, 97, .08);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      min-height: 138px;
-      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+      box-shadow: var(--shadow2);
       position: relative;
       overflow: hidden;
     }
-
-    .card::before {
+    .panel-topbar::after {
       content: "";
       position: absolute;
-      height: 5px;
-      left: 0;
-      right: 0;
-      top: 0;
-      background: var(--primary);
+      right: -60px; top: -60px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,.06);
+      border-radius: 50%;
+      pointer-events: none;
     }
 
-    .card:hover {
-      transform: translateY(-6px) scale(1.012);
-      box-shadow: var(--shadow-hover);
-      border-color: rgba(0, 41, 97, .28);
+    .panel-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(20px, 2.5vw, 34px);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
     }
 
-    .card .label {
-      color: var(--muted);
+    .panel-actions {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      font-weight: 700;
       font-size: 13px;
+      padding: 10px 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      transition: transform .2s, box-shadow .2s, filter .2s;
+    }
+    .btn input { display: none; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,.22); filter: brightness(1.05); }
+
+    .btn-white  { background: #fff; color: var(--primary); }
+    .btn-blue   { background: var(--primary3); color: #fff; border: 1px solid rgba(255,255,255,.22); }
+    .btn-ghost  { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.25); }
+
+    .status-text { color: rgba(255,255,255,.75); font-size: 12px; min-width: 120px; }
+
+    /* ─── KPI GRID (image layout) ─────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 230px 1fr 240px;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    /* LEFT column */
+    .kpi-left { display: flex; flex-direction: column; gap: 12px; }
+
+    .kpi-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(0,41,97,.07);
+      flex: 1;
+    }
+
+    .kpi-label {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .08em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
     }
+    .kpi-label.accent { background: var(--primary2); }
 
-    .card .value {
-      font-size: clamp(27px, 3vw, 43px);
-      font-weight: 950;
-      letter-spacing: -.06em;
-      margin-top: 12px;
-      color: var(--primary);
-    }
-
-    .card .hint {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .card.ok::before { background: var(--green); }
-    .card.bad::before { background: var(--red); }
-    .card.pending::before { background: var(--orange); }
-    .card.rep::before { background: var(--blue); }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .panel {
-      background: rgba(255,255,255,.94);
-      border: 1px solid rgba(0, 41, 97, .08);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: var(--shadow);
-      transition: transform .22s ease, box-shadow .22s ease;
-      overflow: hidden;
-    }
-
-    .panel:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 14px;
-      margin-bottom: 12px;
-    }
-
-    .panel h2 {
-      margin: 0;
-      font-size: 18px;
-      color: var(--primary);
+    .kpi-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(34px, 3.5vw, 54px);
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1;
       letter-spacing: -.02em;
     }
 
-    .panel small {
-      color: var(--muted);
-      display: block;
-      margin-top: 4px;
+    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .kpi-card-sm {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(0,41,97,.07);
+    }
+
+    .kpi-value-sm {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(26px, 2.5vw, 40px);
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    /* CENTER gauge */
+    .gauge-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(0,41,97,.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 10px 10px;
+    }
+
+    .gauge-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      background: var(--primary);
+      padding: 6px 18px;
+      border-radius: 8px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      margin-bottom: 10px;
+    }
+
+    #gaugeCanvas { width: 100%; max-width: 330px; }
+
+    /* RIGHT column */
+    .kpi-right { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ─── PRIORITY ROW ────────────────────────────── */
+    .priority-section {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(0,41,97,.07);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      background: var(--primary);
+      padding: 5px 16px;
+      border-radius: 7px;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      white-space: nowrap;
+    }
+
+    .priority-arrow {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary) 0%, transparent 100%);
+      border-radius: 2px;
+      position: relative;
+    }
+    .priority-arrow::after {
+      content: "▶";
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary);
+      font-size: 12px;
+    }
+
+    .priority-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+    }
+
+    .priority-item { text-align: center; }
+
+    .priority-code {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+      border-bottom: 2.5px solid var(--primary);
+      padding-bottom: 4px;
+      margin-bottom: 5px;
+    }
+
+    .priority-letter {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    /* ─── CHARTS / TABLE ──────────────────────────── */
+    .chart-panel, .table-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid rgba(0,41,97,.07);
+      margin-bottom: 14px;
+    }
+
+    .chart-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      background: var(--primary);
+      padding: 5px 16px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
     }
 
     .table-wrap {
       overflow: auto;
-      max-height: 470px;
-      border-radius: 16px;
-      border: 1px solid #e7edf6;
+      max-height: 340px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 760px;
-      background: #fff;
-    }
-
-    th, td {
-      padding: 12px 13px;
-      border-bottom: 1px solid #eef2f7;
-      text-align: left;
       font-size: 13px;
+      min-width: 560px;
     }
 
     th {
       background: var(--primary);
       color: #fff;
+      padding: 11px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
       position: sticky;
       top: 0;
       z-index: 2;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
     }
 
-    tbody tr {
-      transition: background .15s ease, transform .15s ease;
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eef2f7;
+      color: var(--text);
     }
 
-    tbody tr:hover {
-      background: #eef5ff;
-    }
+    tbody tr:hover { background: #eef5ff; }
 
     .badge {
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 6px 10px;
-      font-weight: 900;
-      font-size: 12px;
-      line-height: 1;
+      padding: 4px 10px;
+      font-weight: 800;
+      font-size: 11px;
     }
-
-    .badge.Correto {
-      color: #087443;
-      background: #dff8eb;
-    }
-
-    .badge.Faltante {
-      color: #a01822;
-      background: #ffe3e5;
-    }
-
-    .badge.Pendente {
-      color: #9a5b00;
-      background: #fff0cf;
-    }
-
-    .ranking-list {
-      display: grid;
-      gap: 10px;
-      max-height: 430px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .rank-item {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      padding: 12px;
-      border-radius: 15px;
-      background: #f8fbff;
-      border: 1px solid #e6eef8;
-      transition: transform .18s ease, background .18s ease;
-    }
-
-    .rank-item:hover {
-      transform: translateX(4px);
-      background: #edf5ff;
-    }
-
-    .rank-name {
-      font-weight: 850;
-      font-size: 13px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .rank-meta {
-      margin-top: 5px;
-      height: 7px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .rank-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--primary-2));
-      border-radius: 999px;
-    }
-
-    .rank-count {
-      font-weight: 950;
-      color: var(--primary);
-      font-size: 18px;
-    }
-
-    canvas {
-      width: 100% !important;
-      max-height: 360px;
-    }
+    .badge-correto  { color: #065f46; background: #d1fae5; }
+    .badge-faltante { color: #991b1b; background: #fee2e2; }
+    .badge-pendente { color: #92400e; background: #fef3c7; }
 
     .footer-info {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
+      margin-top: 10px;
       color: var(--muted);
       font-size: 12px;
-      margin-top: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    .empty {
-      padding: 28px;
-      border: 2px dashed #cbd5e1;
-      border-radius: 18px;
-      color: var(--muted);
-      background: #f8fafc;
+    /* ─── EMPTY STATE ─────────────────────────────── */
+    .empty-state {
       text-align: center;
-      font-weight: 700;
+      padding: 32px;
+      color: var(--muted);
+      font-weight: 600;
     }
 
-    @media (max-width: 1120px) {
-      .cards {
-        grid-template-columns: repeat(3, 1fr);
-      }
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    /* ─── UPLOAD PLACEHOLDER TABS ─────────────────── */
+    .placeholder-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 72vh;
+      padding-top: 40px;
+      gap: 20px;
     }
 
+    .upload-dropzone {
+      background: var(--card);
+      border: 3px dashed rgba(0,41,97,.22);
+      border-radius: 24px;
+      padding: 55px 80px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .28s;
+      max-width: 580px;
+      width: 100%;
+    }
+    .upload-dropzone:hover, .upload-dropzone.drag-over {
+      border-color: var(--primary);
+      background: #eef4ff;
+      transform: translateY(-5px);
+      box-shadow: var(--shadow2);
+    }
+    .upload-dropzone input { display: none; }
+
+    .upload-icon  { font-size: 62px; display: block; margin-bottom: 14px; }
+    .upload-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .upload-sub { color: var(--muted); font-size: 14px; }
+
+    .generic-content { width: 100%; max-width: 1400px; }
+
+    /* ─── RESPONSIVE ──────────────────────────────── */
+    @media (max-width: 1050px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .gauge-wrap { grid-column: 1 / -1; }
+    }
     @media (max-width: 760px) {
-      .app {
-        width: min(100% - 22px, 1480px);
-        padding-top: 11px;
-      }
-      .topbar {
-        grid-template-columns: 1fr;
-        padding: 19px;
-        border-radius: 20px;
-      }
-      .actions {
-        justify-content: stretch;
-      }
-      .upload-label,
-      button {
-        flex: 1 1 100%;
-        justify-content: center;
-      }
-      .status {
-        text-align: left;
-      }
-      .cards {
-        grid-template-columns: 1fr 1fr;
-        gap: 11px;
-      }
-      .card {
-        padding: 15px;
-        min-height: 118px;
-        border-radius: 18px;
-      }
-      .card .label {
-        font-size: 11px;
-      }
-      .card .value {
-        font-size: 30px;
-      }
-      .panel {
-        padding: 14px;
-        border-radius: 18px;
-      }
-      .panel-header {
-        display: block;
-      }
-      table {
-        min-width: 680px;
-      }
+      .tab-panel        { padding: 12px; }
+      .kpi-grid         { grid-template-columns: 1fr; }
+      .kpi-row          { grid-template-columns: 1fr 1fr; }
+      .priority-grid    { grid-template-columns: repeat(5, 1fr); }
+      .upload-dropzone  { padding: 36px 28px; }
+      .panel-topbar     { flex-direction: column; align-items: flex-start; }
     }
-
-    @media (max-width: 460px) {
-      .cards {
-        grid-template-columns: 1fr;
-      }
-      .brand p {
-        font-size: 13px;
-      }
+    @media (max-width: 480px) {
+      .priority-grid { grid-template-columns: repeat(3, 1fr); }
+      .kpi-row       { grid-template-columns: 1fr; }
     }
 
     @media print {
-      body {
-        background: #fff;
-      }
-      .actions {
-        display: none;
-      }
-      .app {
-        width: 100%;
-      }
-      .topbar,
-      .card,
-      .panel {
-        box-shadow: none;
-      }
+      .tab-nav, .panel-actions { display: none; }
+      body { background: #fff; }
     }
   </style>
 </head>
 <body>
-  <main class="app" id="captureArea">
-    <section class="topbar">
-      <div class="brand">
-        <h1>Auditoria de Carrinhos SPA1</h1>
-        <p>Suporte: Ezequiel Miranda</p>
-      </div>
-      <div class="actions">
-        <label class="upload-label">
-          📤 Upload CSV
-          <input type="file" id="csvFile" accept=".csv,text/csv" />
-        </label>
-        <button class="btn-primary" id="printBtn">🖼️ Print HD</button>
-        <button id="reloadBtn">🔄 Recarregar nuvem</button>
-        <div class="status" id="statusText">Aguardando arquivo ou dados salvos na nuvem...</div>
-      </div>
-    </section>
 
-    <section class="dashboard">
-      <div class="cards">
-        <article class="card">
-          <div class="label">Total auditado</div>
-          <div class="value" id="totalCard">0</div>
-          <div class="hint"> </div>
-        </article>
-        <article class="card ok">
-          <div class="label">Corretos</div>
-          <div class="value" id="corretoCard">0</div>
-          <div class="hint" id="corretoPct">0%</div>
-        </article>
-        <article class="card bad">
-          <div class="label">Faltantes</div>
-          <div class="value" id="faltanteCard">0</div>
-          <div class="hint" id="faltantePct">0%</div>
-        </article>
-        <article class="card pending">
-          <div class="label">Pendentes</div>
-          <div class="value" id="pendenteCard">0</div>
-          <div class="hint" id="pendentePct">0%</div>
-        </article>
-        <article class="card rep">
-          <div class="label">Auditores</div>
-          <div class="value" id="repCard">0</div>
-          <div class="hint"> </div>
-        </article>
-      </div>
+<!-- ═══ TAB NAVIGATION ═══════════════════════════════════════════ -->
+<nav class="tab-nav" id="tabNav">
+  <div class="tab-nav-brand">📊 AUDITORIA</div>
+  <button class="tab-btn active"  onclick="switchTab('tab1', this)">🛒 Carrinhos SPA1</button>
+  <button class="tab-btn"         onclick="switchTab('tab2', this)">📦 Painel 2</button>
+  <button class="tab-btn"         onclick="switchTab('tab3', this)">👥 Painel 3</button>
+  <button class="tab-btn"         onclick="switchTab('tab4', this)">📊 Painel 4</button>
+</nav>
 
-      <div class="grid">
-        <section class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Distribuição por Status</h2>
-              <small>Valores calculados diretamente do CSV carregado</small>
-            </div>
+<!-- ═══ TAB 1 — CARRINHOS SPA1 ══════════════════════════════════ -->
+<div class="tab-panel active" id="tab1">
+
+  <div class="panel-topbar">
+    <div class="panel-title">🛒 Auditoria de Carrinhos SPA1</div>
+    <div class="panel-actions">
+      <label class="btn btn-white">
+        📤 Upload CSV
+        <input type="file" id="csvFile" accept=".csv,text/csv" />
+      </label>
+      <button class="btn btn-blue"  id="printBtn">🖼️ Print HD</button>
+      <button class="btn btn-ghost" id="reloadBtn">🔄 Nuvem</button>
+      <span class="status-text" id="statusText">Aguardando dados…</span>
+    </div>
+  </div>
+
+  <div id="captureArea">
+
+    <!-- KPI GRID -->
+    <div class="kpi-grid">
+
+      <!-- LEFT -->
+      <div class="kpi-left">
+        <div class="kpi-card">
+          <div class="kpi-label">Total de Carrinhos</div>
+          <div class="kpi-value" id="totalCarrinhos">—</div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card-sm">
+            <div class="kpi-label accent">Auditados</div>
+            <div class="kpi-value-sm" id="auditados">—</div>
           </div>
-          <canvas id="estadoChart"></canvas>
-        </section>
-
-        <section class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Top auditores</h2>
-              <small>Ranking por quantidade de auditorias</small>
-            </div>
-          </div>
-          <div id="rankingList" class="ranking-list"></div>
-        </section>
-      </div>
-
-      <div class="grid">
-        <section class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Auditorias por hora</h2>
-              <small>Baseado na coluna Data auditoria</small>
-            </div>
-          </div>
-          <canvas id="horaChart"></canvas>
-        </section>
-
-        <section class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Resumo por contêiner</h2>
-              <small>Contêineres com maior volume</small>
-            </div>
-          </div>
-          <canvas id="containerChart"></canvas>
-        </section>
-      </div>
-
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>Base auditada</h2>
-            <small id="tableSubtitle">Nenhum CSV carregado ainda</small>
+          <div class="kpi-card-sm">
+            <div class="kpi-label accent">Pendentes</div>
+            <div class="kpi-value-sm" id="pendentesCarr">—</div>
           </div>
         </div>
+      </div>
+
+      <!-- CENTER GAUGE -->
+      <div class="gauge-wrap">
+        <div class="gauge-title">Aderência de Carrinhos</div>
+        <canvas id="gaugeCanvas" width="380" height="210"></canvas>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="kpi-right">
+        <div class="kpi-row">
+          <div class="kpi-card-sm">
+            <div class="kpi-label">Pacotes</div>
+            <div class="kpi-value-sm" id="pacotes">—</div>
+          </div>
+          <div class="kpi-card-sm">
+            <div class="kpi-label">Á Mais</div>
+            <div class="kpi-value-sm" id="aMais">—</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card-sm">
+            <div class="kpi-label">Verificados</div>
+            <div class="kpi-value-sm" id="verificados">—</div>
+          </div>
+          <div class="kpi-card-sm">
+            <div class="kpi-label accent">Faltantes</div>
+            <div class="kpi-value-sm" id="faltantes">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /kpi-grid -->
+
+    <!-- ORDEM DE PRIORIDADE -->
+    <div class="priority-section">
+      <div class="section-header">
+        <span class="section-label">Ordem de Prioridade</span>
+        <div class="priority-arrow"></div>
+      </div>
+      <div class="priority-grid" id="priorityGrid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">
+          Carregue um CSV para exibir a ordem de prioridade.
+        </div>
+      </div>
+    </div>
+
+    <!-- ADERÊNCIA POR DESTINO -->
+    <div class="chart-panel">
+      <div class="chart-title">Aderência por Destino</div>
+      <canvas id="aderenciaChart" height="90"></canvas>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-panel">
+      <div class="chart-title">Base Auditada</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Shipment ID</th>
+              <th>Data Auditoria</th>
+              <th>Contenedor</th>
+              <th>Estado</th>
+              <th>Rep Auditoria</th>
+            </tr>
+          </thead>
+          <tbody id="dataTable">
+            <tr><td colspan="5"><div class="empty-state">Faça upload do CSV para atualizar o painel.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="footer-info">
+        <span id="lastUpdate">Última atualização: —</span>
+        <span id="tableSubtitle">Nenhum CSV carregado</span>
+      </div>
+    </div>
+
+  </div><!-- /captureArea -->
+</div>
+
+<!-- ═══ TAB 2 ════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab2">
+  <div class="panel-topbar" style="margin-bottom:24px">
+    <div class="panel-title">📦 Painel 2</div>
+    <div class="panel-actions">
+      <span class="status-text" id="status2">Aguardando arquivo…</span>
+    </div>
+  </div>
+  <div class="placeholder-wrap">
+    <label class="upload-dropzone" id="dropzone2">
+      <span class="upload-icon">📂</span>
+      <div class="upload-title">Carregar CSV — Painel 2</div>
+      <div class="upload-sub">Clique aqui ou arraste seu arquivo .csv</div>
+      <input type="file" id="csvFile2" accept=".csv,text/csv" />
+    </label>
+    <div class="generic-content" id="panel2Content" style="display:none">
+      <div class="chart-panel">
+        <div class="chart-title">Dados — Painel 2</div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Shipment ID</th>
-                <th>Data auditoria</th>
-                <th>Contenedor</th>
-                <th>Estado</th>
-                <th>Rep auditoria</th>
-              </tr>
-            </thead>
-            <tbody id="dataTable">
-              <tr><td colspan="5"><div class="empty">Faça upload do CSV para atualizar o painel.</div></td></tr>
-            </tbody>
+            <thead><tr id="p2Headers"></tr></thead>
+            <tbody id="p2Table"></tbody>
           </table>
         </div>
-        <div class="footer-info">
-          <span id="lastUpdate">Última atualização: --</span>
-          <span>Firebase: reportinventario-default-rtdb.firebaseio.com</span>
+        <div class="footer-info"><span id="p2Footer"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 3 ════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab3">
+  <div class="panel-topbar" style="margin-bottom:24px">
+    <div class="panel-title">👥 Painel 3</div>
+    <div class="panel-actions">
+      <span class="status-text" id="status3">Aguardando arquivo…</span>
+    </div>
+  </div>
+  <div class="placeholder-wrap">
+    <label class="upload-dropzone" id="dropzone3">
+      <span class="upload-icon">📂</span>
+      <div class="upload-title">Carregar CSV — Painel 3</div>
+      <div class="upload-sub">Clique aqui ou arraste seu arquivo .csv</div>
+      <input type="file" id="csvFile3" accept=".csv,text/csv" />
+    </label>
+    <div class="generic-content" id="panel3Content" style="display:none">
+      <div class="chart-panel">
+        <div class="chart-title">Dados — Painel 3</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr id="p3Headers"></tr></thead>
+            <tbody id="p3Table"></tbody>
+          </table>
         </div>
-      </section>
-    </section>
-  </main>
+        <div class="footer-info"><span id="p3Footer"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <script>
-    const FIREBASE_URL = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
-
-    let currentRows = [];
-    let charts = {};
-
-    const $ = (id) => document.getElementById(id);
-    const nfBR = new Intl.NumberFormat("pt-BR");
-    const fmt = (value) => nfBR.format(Number(value) || 0);
-
-    const normalize = (s) => String(s || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim()
-      .toLowerCase();
-
-    function setStatus(message) {
-      $("statusText").textContent = message;
-    }
-
-    function parseCSV(text) {
-      text = text.replace(/^\uFEFF/, "");
-      const rows = [];
-      let row = [];
-      let field = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const next = text[i + 1];
-
-        if (char === '"' && inQuotes && next === '"') {
-          field += '"';
-          i++;
-        } else if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
-          row.push(field);
-          field = "";
-        } else if ((char === "\n" || char === "\r") && !inQuotes) {
-          if (char === "\r" && next === "\n") i++;
-          row.push(field);
-          if (row.some(cell => String(cell).trim() !== "")) rows.push(row);
-          row = [];
-          field = "";
-        } else {
-          field += char;
-        }
-      }
-
-      if (field.length || row.length) {
-        row.push(field);
-        if (row.some(cell => String(cell).trim() !== "")) rows.push(row);
-      }
-
-      if (!rows.length) return [];
-
-      const headers = rows[0].map(h => h.replace(/^\uFEFF/, "").trim());
-      return rows.slice(1).map(cols => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h] = (cols[i] || "").trim());
-        return {
-          shipmentId: obj["Shipment ID"] || obj["shipmentId"] || "",
-          dataAuditoria: obj["Data auditoria"] || obj["dataAuditoria"] || "",
-          contenedor: obj["Contenedor"] || obj["contenedor"] || "",
-          estado: obj["Estado"] || obj["estado"] || "",
-          repAuditoria: obj["Rep auditoria"] || obj["repAuditoria"] || ""
-        };
-      }).filter(r => r.shipmentId || r.dataAuditoria || r.contenedor || r.estado || r.repAuditoria);
-    }
-
-    function countBy(rows, key) {
-      return rows.reduce((acc, row) => {
-        const value = row[key] || "Não informado";
-        acc[value] = (acc[value] || 0) + 1;
-        return acc;
-      }, {});
-    }
-
-    function parseDateBR(dateStr) {
-      const m = String(dateStr || "").match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
-      if (!m) return null;
-      return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4]), Number(m[5]), Number(m[6]));
-    }
-
-    function pct(value, total) {
-      return total ? ((value / total) * 100).toFixed(1).replace(".", ",") + "%" : "0%";
-    }
-
-    function sortedEntries(obj) {
-      return Object.entries(obj).sort((a, b) => b[1] - a[1]);
-    }
-
-    function destroyChart(id) {
-      if (charts[id]) {
-        charts[id].destroy();
-        delete charts[id];
-      }
-    }
-
-    function renderCharts(rows) {
-      const estadoCounts = countBy(rows, "estado");
-      const estadoLabels = ["Correto", "Faltante", "Pendente"].filter(k => estadoCounts[k]);
-      Object.keys(estadoCounts).forEach(k => {
-        if (!estadoLabels.includes(k)) estadoLabels.push(k);
-      });
-
-      destroyChart("estadoChart");
-      charts.estadoChart = new Chart($("estadoChart"), {
-        type: "doughnut",
-        data: {
-          labels: estadoLabels,
-          datasets: [{
-            data: estadoLabels.map(k => estadoCounts[k] || 0),
-            backgroundColor: estadoLabels.map(k => {
-              if (normalize(k) === "correto") return "#18a058";
-              if (normalize(k) === "faltante") return "#e5484d";
-              if (normalize(k) === "pendente") return "#f59e0b";
-              return "#002961";
-            }),
-            borderColor: "#ffffff",
-            borderWidth: 4,
-            hoverOffset: 14
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: "bottom", labels: { usePointStyle: true, font: { weight: "bold" } } },
-            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.raw)} (${pct(ctx.raw, rows.length)})` } }
-          },
-          animation: { duration: 900, easing: "easeOutQuart" }
-        }
-      });
-
-      const hourCounts = {};
-      rows.forEach(row => {
-        const d = parseDateBR(row.dataAuditoria);
-        const h = d ? String(d.getHours()).padStart(2, "0") + "h" : "Sem hora";
-        hourCounts[h] = (hourCounts[h] || 0) + 1;
-      });
-      const hourLabels = Object.keys(hourCounts).sort((a, b) => parseInt(a) - parseInt(b));
-
-      destroyChart("horaChart");
-      charts.horaChart = new Chart($("horaChart"), {
-        type: "bar",
-        data: {
-          labels: hourLabels,
-          datasets: [{
-            label: "Auditorias",
-            data: hourLabels.map(h => hourCounts[h]),
-            backgroundColor: "#002961",
-            borderRadius: 12,
-            hoverBackgroundColor: "#06418f"
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { grid: { display: false } },
-            y: { beginAtZero: true, ticks: { precision: 0, callback: value => fmt(value) } }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => `Auditorias: ${fmt(ctx.raw)}` } }
-          },
-          animation: { duration: 800, easing: "easeOutQuart" }
-        }
-      });
-
-      const containerTop = sortedEntries(countBy(rows, "contenedor")).slice(0, 10);
-
-      destroyChart("containerChart");
-      charts.containerChart = new Chart($("containerChart"), {
-        type: "bar",
-        data: {
-          labels: containerTop.map(([k]) => k),
-          datasets: [{
-            label: "Registros",
-            data: containerTop.map(([, v]) => v),
-            backgroundColor: "#002961",
-            borderRadius: 12,
-            hoverBackgroundColor: "#06418f"
-          }]
-        },
-        options: {
-          indexAxis: "y",
-          responsive: true,
-          scales: {
-            x: { beginAtZero: true, ticks: { precision: 0, callback: value => fmt(value) } },
-            y: { grid: { display: false } }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => `Registros: ${fmt(ctx.raw)}` } }
-          },
-          animation: { duration: 800, easing: "easeOutQuart" }
-        }
-      });
-    }
-
-    function renderRanking(rows) {
-      const ranking = sortedEntries(countBy(rows, "repAuditoria")).slice(0, 15);
-      const max = ranking[0]?.[1] || 1;
-      $("rankingList").innerHTML = ranking.length ? ranking.map(([name, count]) => `
-        <div class="rank-item" title="${escapeHTML(name)}: ${fmt(count)} auditoria(s)">
-          <div>
-            <div class="rank-name">${escapeHTML(name)}</div>
-            <div class="rank-meta"><div class="rank-bar" style="width:${Math.max(6, (count / max) * 100)}%"></div></div>
-          </div>
-          <div class="rank-count">${fmt(count)}</div>
+<!-- ═══ TAB 4 ════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab4">
+  <div class="panel-topbar" style="margin-bottom:24px">
+    <div class="panel-title">📊 Painel 4</div>
+    <div class="panel-actions">
+      <span class="status-text" id="status4">Aguardando arquivo…</span>
+    </div>
+  </div>
+  <div class="placeholder-wrap">
+    <label class="upload-dropzone" id="dropzone4">
+      <span class="upload-icon">📂</span>
+      <div class="upload-title">Carregar CSV — Painel 4</div>
+      <div class="upload-sub">Clique aqui ou arraste seu arquivo .csv</div>
+      <input type="file" id="csvFile4" accept=".csv,text/csv" />
+    </label>
+    <div class="generic-content" id="panel4Content" style="display:none">
+      <div class="chart-panel">
+        <div class="chart-title">Dados — Painel 4</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr id="p4Headers"></tr></thead>
+            <tbody id="p4Table"></tbody>
+          </table>
         </div>
-      `).join("") : `<div class="empty">Sem dados para ranking.</div>`;
+        <div class="footer-info"><span id="p4Footer"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCRIPTS ══════════════════════════════════════════════════ -->
+<script>
+const FIREBASE_URL = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
+let currentRows = [];
+let activeChart = null;
+
+const $  = id => document.getElementById(id);
+const nf = new Intl.NumberFormat("pt-BR");
+const fmt = v => nf.format(Number(v) || 0);
+const normalize = s => String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+
+/* ── TAB SWITCHING ─────────────────────────────────── */
+function switchTab(id, btn) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  $(id).classList.add("active");
+  btn.classList.add("active");
+}
+
+/* ── GAUGE ─────────────────────────────────────────── */
+function drawGauge(pct) {
+  const canvas = $("gaugeCanvas");
+  const ctx    = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H * 0.82;
+  const r  = Math.min(W * 0.4, H * 0.70);
+  const lw = Math.max(16, r * 0.12);
+
+  // Track
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth   = lw;
+  ctx.lineCap     = "butt";
+  ctx.stroke();
+
+  // Ticks
+  for (let i = 0; i <= 10; i++) {
+    const a = Math.PI + (i / 10) * Math.PI;
+    const tickLen = i % 5 === 0 ? lw * 1.0 : lw * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * (r - lw / 2 - 2), cy + Math.sin(a) * (r - lw / 2 - 2));
+    ctx.lineTo(cx + Math.cos(a) * (r - lw / 2 - 2 - tickLen), cy + Math.sin(a) * (r - lw / 2 - 2 - tickLen));
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth   = i % 5 === 0 ? 2 : 1;
+    ctx.stroke();
+  }
+
+  // Progress arc
+  const angle = Math.PI + (Math.min(pct, 100) / 100) * Math.PI;
+  const grad  = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+  grad.addColorStop(0,   "#1a56db");
+  grad.addColorStop(0.6, "#002961");
+  grad.addColorStop(1,   pct > 85 ? "#16a34a" : "#e5484d");
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, angle);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth   = lw;
+  ctx.lineCap     = "round";
+  ctx.stroke();
+
+  // Needle dot
+  ctx.beginPath();
+  ctx.arc(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, lw * 0.38, 0, 2 * Math.PI);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.strokeStyle = "#002961";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Center text
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.fillStyle = "#002961";
+  ctx.font      = `900 ${Math.round(r * 0.30)}px 'Barlow Condensed', sans-serif`;
+  ctx.fillText(pct.toFixed(2).replace(".", ",") + "%", cx, cy - r * 0.26);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font      = `600 ${Math.round(r * 0.14)}px 'Barlow', sans-serif`;
+  ctx.fillText("PROGRESSO", cx, cy - r * 0.06);
+
+  // Min / Max labels
+  ctx.font      = `700 ${Math.round(r * 0.13)}px 'Barlow', sans-serif`;
+  ctx.fillStyle = "#94a3b8";
+  ctx.textAlign = "left";
+  ctx.fillText("0%",   cx - r - 3, cy + 12);
+  ctx.textAlign = "right";
+  ctx.fillText("100%", cx + r + 3, cy + 12);
+}
+
+/* ── CSV PARSE (Carrinhos) ─────────────────────────── */
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [], field = "", inQ = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], n = text[i + 1];
+    if (c === '"' && inQ && n === '"') { field += '"'; i++; }
+    else if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { row.push(field); field = ""; }
+    else if ((c === '\n' || c === '\r') && !inQ) {
+      if (c === '\r' && n === '\n') i++;
+      row.push(field);
+      if (row.some(x => String(x).trim())) rows.push(row);
+      row = []; field = "";
+    } else { field += c; }
+  }
+  if (field || row.length) { row.push(field); if (row.some(x => String(x).trim())) rows.push(row); }
+  if (!rows.length) return [];
+
+  const hdrs = rows[0].map(h => h.trim());
+  return rows.slice(1).map(cols => {
+    const o = {};
+    hdrs.forEach((h, i) => o[h] = (cols[i] || "").trim());
+    return {
+      shipmentId:   o["Shipment ID"]   || o["shipmentId"]   || "",
+      dataAuditoria:o["Data auditoria"]|| o["dataAuditoria"] || "",
+      contenedor:   o["Contenedor"]    || o["contenedor"]    || "",
+      estado:       o["Estado"]        || o["estado"]        || "",
+      repAuditoria: o["Rep auditoria"] || o["repAuditoria"]  || ""
+    };
+  }).filter(r => r.shipmentId || r.contenedor || r.estado);
+}
+
+/* ── CSV PARSE (Generic) ───────────────────────────── */
+function parseCSVGeneric(text) {
+  text = text.replace(/^\uFEFF/, "");
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return { headers: [], rows: [] };
+  const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+  const rows = lines.slice(1).map(line => {
+    const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
+    const obj  = {};
+    headers.forEach((h, i) => obj[h] = cols[i] || "");
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+  return { headers, rows };
+}
+
+function countBy(rows, key) {
+  return rows.reduce((acc, r) => {
+    const v = r[key] || "N/A";
+    acc[v] = (acc[v] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function sortedEntries(obj) {
+  return Object.entries(obj).sort((a, b) => b[1] - a[1]);
+}
+
+function escH(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":'&#039;'}[c]));
+}
+
+function badgeClass(estado) {
+  const n = normalize(estado);
+  if (n === "correto")  return "correto";
+  if (n === "faltante") return "faltante";
+  return "pendente";
+}
+
+function setStatus(msg) { $("statusText").textContent = msg; }
+
+/* ── RENDER MAIN PANEL ─────────────────────────────── */
+function render(rows, label = "CSV") {
+  currentRows = rows;
+  const total  = rows.length;
+
+  // Estado counts
+  const estadoCnt = countBy(rows, "estado");
+  const correto   = Object.entries(estadoCnt).filter(([k]) => normalize(k) === "correto" ).reduce((a,[,v]) => a+v, 0);
+  const faltante  = Object.entries(estadoCnt).filter(([k]) => normalize(k) === "faltante").reduce((a,[,v]) => a+v, 0);
+  const pendente  = Object.entries(estadoCnt).filter(([k]) => normalize(k) === "pendente").reduce((a,[,v]) => a+v, 0);
+
+  // Carrinhos
+  const conts      = [...new Set(rows.map(r => r.contenedor).filter(Boolean))];
+  const totalCarr  = conts.length;
+  const auditadoSt = new Set(rows.filter(r => normalize(r.estado) === "correto").map(r => r.contenedor));
+  const auditados  = auditadoSt.size;
+  const pendenteC  = totalCarr - auditados;
+  const aderencia  = totalCarr > 0 ? (auditados / totalCarr) * 100 : 0;
+
+  $("totalCarrinhos").textContent = fmt(totalCarr);
+  $("auditados").textContent      = fmt(auditados);
+  $("pendentesCarr").textContent  = fmt(pendenteC);
+  $("pacotes").textContent        = fmt(total);
+  $("verificados").textContent    = fmt(correto);
+  $("faltantes").textContent      = fmt(faltante);
+  $("aMais").textContent          = fmt(pendente);
+
+  drawGauge(aderencia);
+
+  // Priority: sort contenedores by pending count DESC
+  const pendPorCont = {};
+  conts.forEach(c => {
+    pendPorCont[c] = rows.filter(r => r.contenedor === c && normalize(r.estado) !== "correto").length;
+  });
+  const priority = [...conts].sort((a, b) => pendPorCont[b] - pendPorCont[a]).slice(0, 10);
+  const LETTERS  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  $("priorityGrid").innerHTML = priority.length
+    ? priority.map((c, i) => `
+        <div class="priority-item">
+          <div class="priority-code">${escH(c)}</div>
+          <div class="priority-letter">${LETTERS[i] || "?"}</div>
+        </div>`).join("")
+    : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">
+         Sem contenedores para exibir.
+       </div>`;
+
+  // Aderência por destino chart
+  const allDest = conts.slice(0, 15);
+  const adh     = allDest.map(c => {
+    const t = rows.filter(r => r.contenedor === c).length;
+    const ok= rows.filter(r => r.contenedor === c && normalize(r.estado) === "correto").length;
+    return t > 0 ? Math.round((ok / t) * 10000) / 100 : 0;
+  });
+
+  if (activeChart) { activeChart.destroy(); }
+  activeChart = new Chart($("aderenciaChart"), {
+    type: "bar",
+    data: {
+      labels: allDest,
+      datasets: [{
+        label: "Aderência (%)",
+        data: adh,
+        backgroundColor: adh.map(v => v >= 90 ? "#002961" : v >= 50 ? "#1a56db" : "#60a5fa"),
+        borderRadius: 10,
+        hoverBackgroundColor: "#06418f"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true, max: 100,
+          ticks: { callback: v => v + "%" },
+          grid: { color: "#f1f5f9" }
+        },
+        x: { grid: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `Aderência: ${ctx.raw.toFixed(2).replace(".", ",")}%` } }
+      },
+      animation: { duration: 900, easing: "easeOutQuart" }
     }
+  });
 
-    function renderTable(rows) {
-      const body = $("dataTable");
-      if (!rows.length) {
-        body.innerHTML = `<tr><td colspan="5"><div class="empty">Faça upload do CSV para atualizar o painel.</div></td></tr>`;
-        $("tableSubtitle").textContent = "Nenhum CSV carregado ainda";
-        return;
-      }
+  // Table (max 300 rows)
+  $("dataTable").innerHTML = rows.slice(0, 300).map(r => `
+    <tr>
+      <td>${escH(r.shipmentId)}</td>
+      <td>${escH(r.dataAuditoria)}</td>
+      <td>${escH(r.contenedor)}</td>
+      <td><span class="badge badge-${badgeClass(r.estado)}">${escH(r.estado || "N/A")}</span></td>
+      <td>${escH(r.repAuditoria)}</td>
+    </tr>`).join("");
 
-      body.innerHTML = rows.map(row => `
-        <tr>
-          <td>${escapeHTML(row.shipmentId)}</td>
-          <td>${escapeHTML(row.dataAuditoria)}</td>
-          <td>${escapeHTML(row.contenedor)}</td>
-          <td><span class="badge ${escapeClass(row.estado)}">${escapeHTML(row.estado || "Não informado")}</span></td>
-          <td>${escapeHTML(row.repAuditoria)}</td>
-        </tr>
-      `).join("");
+  $("tableSubtitle").textContent = `${fmt(rows.length)} registros · exibindo ${Math.min(rows.length, 300)}`;
+  $("lastUpdate").textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")} · ${label}`;
+  setStatus(`${fmt(rows.length)} registros · ${fmt(totalCarr)} carrinhos`);
+}
 
-      $("tableSubtitle").textContent = `${fmt(rows.length)} registro(s) exibidos`;
-    }
+/* ── RENDER GENERIC ────────────────────────────────── */
+function renderGeneric(num, data) {
+  const { headers, rows } = data;
+  if (!headers.length) return;
+  $(`p${num}Headers`).innerHTML = headers.map(h => `<th>${escH(h)}</th>`).join("");
+  $(`p${num}Table`).innerHTML   = rows.slice(0, 200).map(r =>
+    `<tr>${headers.map(h => `<td>${escH(r[h])}</td>`).join("")}</tr>`
+  ).join("");
+  $(`p${num}Footer`).textContent = `${fmt(rows.length)} registros · ${headers.length} colunas`;
+  $(`panel${num}Content`).style.display = "block";
+  document.querySelector(`#tab${num} .upload-dropzone`).style.maxWidth = "100%";
+  document.querySelector(`#tab${num} .upload-dropzone`).style.padding  = "18px 24px";
+}
 
-    function escapeHTML(value) {
-      return String(value ?? "").replace(/[&<>"']/g, c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[c]));
-    }
+/* ── FIREBASE ──────────────────────────────────────── */
+async function saveToFirebase(rows, fileName) {
+  setStatus("Salvando na nuvem…");
+  const payload = { updatedAt: new Date().toISOString(), fileName, totalRows: rows.length, rows };
+  const res = await fetch(FIREBASE_URL, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error("Firebase PUT failed");
+  setStatus(`Salvo: ${fmt(rows.length)} registros.`);
+}
 
-    function escapeClass(value) {
-      const n = normalize(value);
-      if (n === "correto") return "Correto";
-      if (n === "faltante") return "Faltante";
-      if (n === "pendente") return "Pendente";
-      return "";
-    }
+async function loadFromFirebase() {
+  try {
+    setStatus("Carregando da nuvem…");
+    const res  = await fetch(FIREBASE_URL);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (data?.rows?.length) { render(data.rows, "Firebase"); }
+    else { setStatus("Sem dados na nuvem. Faça upload do CSV."); }
+  } catch { setStatus("Não foi possível carregar da nuvem."); }
+}
 
-    function render(rows, sourceLabel = "CSV") {
-      currentRows = rows;
+/* ── EVENTS: TAB 1 ─────────────────────────────────── */
+$("csvFile").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setStatus("Lendo CSV…");
+  try {
+    const text = await file.text();
+    const rows = parseCSV(text);
+    if (!rows.length) { setStatus("CSV sem registros válidos."); return; }
+    render(rows, file.name);
+    await saveToFirebase(rows, file.name);
+  } catch(err) { console.error(err); setStatus("Erro ao processar CSV."); }
+});
 
-      const total = rows.length;
-      const estadoCounts = countBy(rows, "estado");
-      const correto = Object.entries(estadoCounts).filter(([k]) => normalize(k) === "correto").reduce((a, [,v]) => a + v, 0);
-      const faltante = Object.entries(estadoCounts).filter(([k]) => normalize(k) === "faltante").reduce((a, [,v]) => a + v, 0);
-      const pendente = Object.entries(estadoCounts).filter(([k]) => normalize(k) === "pendente").reduce((a, [,v]) => a + v, 0);
-      const reps = new Set(rows.map(r => r.repAuditoria).filter(Boolean)).size;
+$("reloadBtn").addEventListener("click", loadFromFirebase);
 
-      $("totalCard").textContent = fmt(total);
-      $("corretoCard").textContent = fmt(correto);
-      $("faltanteCard").textContent = fmt(faltante);
-      $("pendenteCard").textContent = fmt(pendente);
-      $("repCard").textContent = fmt(reps);
+$("printBtn").addEventListener("click", async () => {
+  try {
+    setStatus("Gerando imagem…");
+    const canvas = await html2canvas($("captureArea"), { scale: 2, backgroundColor: "#eef3fb", useCORS: true, logging: false });
+    const link   = document.createElement("a");
+    link.download = `auditoria-spa1-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href     = canvas.toDataURL("image/png", 1.0);
+    link.click();
+    setStatus("Imagem HD salva!");
+  } catch(err) { console.error(err); setStatus("Erro ao gerar imagem."); }
+});
 
-      $("corretoPct").textContent = pct(correto, total);
-      $("faltantePct").textContent = pct(faltante, total);
-      $("pendentePct").textContent = pct(pendente, total);
+/* ── EVENTS: GENERIC TABS ──────────────────────────── */
+[2, 3, 4].forEach(num => {
+  const fileInput = $(`csvFile${num}`);
+  const dropzone  = $(`dropzone${num}`);
+  const statusEl  = $(`status${num}`);
 
-      renderCharts(rows);
-      renderRanking(rows);
-      renderTable(rows);
+  fileInput.addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    statusEl.textContent = "Lendo CSV…";
+    const text = await file.text();
+    const data = parseCSVGeneric(text);
+    renderGeneric(num, data);
+    statusEl.textContent = `${fmt(data.rows.length)} registros carregados`;
+  });
 
-      const now = new Date();
-      $("lastUpdate").textContent = `Última atualização: ${now.toLocaleString("pt-BR")} • Origem: ${sourceLabel}`;
-    }
+  // Drag & drop
+  dropzone.addEventListener("dragover",  e => { e.preventDefault(); dropzone.classList.add("drag-over"); });
+  dropzone.addEventListener("dragleave", ()  => dropzone.classList.remove("drag-over"));
+  dropzone.addEventListener("drop", async e => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    statusEl.textContent = "Lendo CSV…";
+    const text = await file.text();
+    const data = parseCSVGeneric(text);
+    renderGeneric(num, data);
+    statusEl.textContent = `${fmt(data.rows.length)} registros carregados`;
+  });
+});
 
-    async function saveToFirebase(rows, fileName = "upload.csv") {
-      setStatus("Salvando automaticamente na nuvem...");
-      const payload = {
-        updatedAt: new Date().toISOString(),
-        fileName,
-        totalRows: rows.length,
-        rows
-      };
-
-      const response = await fetch(FIREBASE_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error("Falha ao salvar no Firebase");
-      setStatus(`Salvo na nuvem com sucesso: ${fmt(rows.length)} registro(s).`);
-    }
-
-    async function loadFromFirebase() {
-      try {
-        setStatus("Carregando dados da nuvem...");
-        const response = await fetch(FIREBASE_URL);
-        if (!response.ok) throw new Error("Falha ao consultar Firebase");
-        const data = await response.json();
-
-        if (data && Array.isArray(data.rows) && data.rows.length) {
-          render(data.rows, "Firebase");
-          setStatus(`Dados carregados da nuvem: ${fmt(data.rows.length)} registro(s).`);
-        } else {
-          setStatus("Nenhum dado encontrado na nuvem. Faça upload do CSV.");
-        }
-      } catch (error) {
-        console.error(error);
-        setStatus("Não foi possível carregar da nuvem. Verifique conexão/permissão do Firebase.");
-      }
-    }
-
-    $("csvFile").addEventListener("change", async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      try {
-        setStatus("Lendo CSV...");
-        const text = await file.text();
-        const rows = parseCSV(text);
-
-        if (!rows.length) {
-          setStatus("CSV sem registros válidos.");
-          return;
-        }
-
-        render(rows, file.name);
-        await saveToFirebase(rows, file.name);
-      } catch (error) {
-        console.error(error);
-        setStatus("Erro ao processar/salvar CSV. Confira o modelo do arquivo.");
-      }
-    });
-
-    $("reloadBtn").addEventListener("click", loadFromFirebase);
-
-    $("printBtn").addEventListener("click", async () => {
-      try {
-        setStatus("Gerando imagem em alta resolução...");
-        const area = $("captureArea");
-        const canvas = await html2canvas(area, {
-          scale: Math.min(3, window.devicePixelRatio * 2 || 2),
-          backgroundColor: "#f3f6fb",
-          useCORS: true,
-          logging: false
-        });
-
-        const link = document.createElement("a");
-        const date = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-        link.download = `auditoria-carrinhos-spa1-${date}.png`;
-        link.href = canvas.toDataURL("image/png", 1.0);
-        link.click();
-
-        setStatus("Imagem HD salva. Pode enviar no WhatsApp.");
-      } catch (error) {
-        console.error(error);
-        setStatus("Erro ao gerar imagem. Tente novamente.");
-      }
-    });
-
-    loadFromFirebase();
-  </script>
+/* ── INIT ──────────────────────────────────────────── */
+drawGauge(0);
+loadFromFirebase();
+</script>
 </body>
 </html>
-'''
-with open('index.html', 'w', encoding='utf-8') as f:
-    f.write(html)
