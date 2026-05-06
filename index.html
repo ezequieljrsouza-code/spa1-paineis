@@ -1,0 +1,554 @@
+html = r'''<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auditoria de Carrinhos SPA1</title>
+  <style>
+    :root{
+      --azul:#002961;
+      --azul-2:#073a82;
+      --azul-3:#eaf1fb;
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --texto:#182033;
+      --muted:#6b7280;
+      --verde:#17a673;
+      --vermelho:#d93636;
+      --laranja:#f59e0b;
+      --borda:#dbe3ef;
+      --sombra:0 14px 35px rgba(0,41,97,.12);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(135deg,#f4f7fb 0%,#eef4fb 100%);
+      color:var(--texto);
+    }
+    .app{
+      width:min(1440px,100%);
+      margin:0 auto;
+      padding:22px;
+    }
+    .topbar{
+      background:linear-gradient(135deg,var(--azul),var(--azul-2));
+      color:white;
+      border-radius:24px;
+      padding:24px;
+      box-shadow:var(--sombra);
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:18px;
+      align-items:center;
+    }
+    .topbar h1{
+      margin:0;
+      font-size:clamp(26px,4vw,46px);
+      letter-spacing:-.7px;
+      font-weight:900;
+    }
+    .topbar p{
+      margin:8px 0 0;
+      color:rgba(255,255,255,.88);
+      font-size:clamp(14px,2vw,18px);
+      font-weight:600;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    button,.file-label{
+      border:0;
+      background:white;
+      color:var(--azul);
+      padding:12px 16px;
+      border-radius:14px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+      transition:.2s ease;
+      font-size:14px;
+      white-space:nowrap;
+    }
+    button:hover,.file-label:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 22px rgba(0,0,0,.18);
+    }
+    input[type=file]{display:none}
+    .status{
+      margin-top:14px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      color:rgba(255,255,255,.95);
+      font-size:13px;
+      font-weight:700;
+    }
+    .pill{
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      padding:8px 12px;
+      border-radius:999px;
+    }
+    .grid-cards{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:16px;
+      margin:18px 0;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--borda);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 10px 24px rgba(0,41,97,.08);
+      transition:.22s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      top:0;left:0;right:0;
+      height:5px;
+      background:var(--azul);
+    }
+    .card:hover{
+      transform:translateY(-5px) scale(1.01);
+      box-shadow:0 18px 38px rgba(0,41,97,.16);
+      border-color:rgba(0,41,97,.28);
+    }
+    .card .label{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .card .value{
+      margin-top:10px;
+      font-size:clamp(25px,3.5vw,40px);
+      font-weight:900;
+      color:var(--azul);
+      line-height:1;
+    }
+    .card .hint{
+      margin-top:9px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+    .main{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:16px;
+    }
+    .panel{
+      background:white;
+      border:1px solid var(--borda);
+      border-radius:24px;
+      padding:18px;
+      box-shadow:0 10px 24px rgba(0,41,97,.08);
+      transition:.2s ease;
+    }
+    .panel:hover{box-shadow:0 18px 36px rgba(0,41,97,.14)}
+    .panel h2{
+      margin:0 0 14px;
+      font-size:20px;
+      color:var(--azul);
+    }
+    .bars{display:grid;gap:12px}
+    .bar-row{
+      display:grid;
+      grid-template-columns:110px 1fr 70px;
+      gap:10px;
+      align-items:center;
+      font-weight:800;
+      color:#334155;
+    }
+    .track{
+      height:18px;
+      background:var(--azul-3);
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid #d5e1f2;
+    }
+    .fill{
+      height:100%;
+      border-radius:999px;
+      width:0%;
+      transition:width .7s cubic-bezier(.2,.8,.2,1);
+    }
+    .fill.ok{background:var(--verde)}
+    .fill.fal{background:var(--vermelho)}
+    .fill.pen{background:var(--laranja)}
+    .split{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:16px;
+      font-size:13px;
+    }
+    th,td{
+      padding:11px 10px;
+      text-align:left;
+      border-bottom:1px solid #e8eef6;
+    }
+    th{
+      background:var(--azul);
+      color:white;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+    }
+    tr:hover td{background:#f4f8fd}
+    .badge{
+      display:inline-block;
+      padding:5px 9px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+    }
+    .badge.Correto{background:#dff7ee;color:#087a52}
+    .badge.Faltante{background:#ffe4e4;color:#a41919}
+    .badge.Pendente{background:#fff1d6;color:#9a5c00}
+    .footer-note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:12px;
+      font-weight:700;
+    }
+    .search{
+      width:100%;
+      border:1px solid var(--borda);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      outline:none;
+      margin-bottom:12px;
+    }
+    .search:focus{border-color:var(--azul);box-shadow:0 0 0 4px rgba(0,41,97,.09)}
+    #printArea{background:transparent}
+    @media(max-width:1100px){
+      .grid-cards{grid-template-columns:repeat(3,1fr)}
+      .main{grid-template-columns:1fr}
+    }
+    @media(max-width:700px){
+      .app{padding:12px}
+      .topbar{
+        grid-template-columns:1fr;
+        border-radius:18px;
+        padding:18px;
+      }
+      .actions{justify-content:flex-start}
+      button,.file-label{width:100%;text-align:center}
+      .grid-cards{grid-template-columns:1fr 1fr;gap:10px}
+      .card{padding:14px;border-radius:18px}
+      .split{grid-template-columns:1fr}
+      .bar-row{grid-template-columns:88px 1fr 52px;font-size:12px}
+      th,td{padding:9px 7px;font-size:12px}
+      .hide-mobile{display:none}
+    }
+    @media(max-width:430px){
+      .grid-cards{grid-template-columns:1fr}
+    }
+    @media print{
+      body{background:white}
+      .actions,.search{display:none!important}
+      .app{padding:0}
+      .topbar,.card,.panel{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="printArea">
+    <section class="topbar">
+      <div>
+        <h1>Auditoria de Carrinhos SPA1</h1>
+        <p>Suporte: Ezequiel Miranda</p>
+        <div class="status">
+          <span class="pill" id="firebaseStatus">Firebase: aguardando dados</span>
+          <span class="pill" id="lastUpdate">Última atualização: --</span>
+          <span class="pill" id="fileName">Arquivo: nenhum</span>
+        </div>
+      </div>
+      <div class="actions">
+        <label class="file-label" for="csvInput">Enviar CSV</label>
+        <input id="csvInput" type="file" accept=".csv,text/csv" />
+        <button id="printBtn" type="button">Print WhatsApp</button>
+        <button id="clearBtn" type="button">Limpar busca</button>
+      </div>
+    </section>
+
+    <section class="grid-cards">
+      <div class="card"><div class="label">Total auditado</div><div class="value" id="total">0</div><div class="hint">Linhas válidas do CSV</div></div>
+      <div class="card"><div class="label">Corretos</div><div class="value" id="corretos">0</div><div class="hint">Estado = Correto</div></div>
+      <div class="card"><div class="label">Faltantes</div><div class="value" id="faltantes">0</div><div class="hint">Estado = Faltante</div></div>
+      <div class="card"><div class="label">Pendentes</div><div class="value" id="pendentes">0</div><div class="hint">Estado = Pendente</div></div>
+      <div class="card"><div class="label">Contêineres</div><div class="value" id="containers">0</div><div class="hint">Contenedor únicos</div></div>
+      <div class="card"><div class="label">Acuracidade</div><div class="value" id="acuracidade">0%</div><div class="hint">Corretos / Total</div></div>
+    </section>
+
+    <section class="main">
+      <div>
+        <div class="panel">
+          <h2>Resumo por status</h2>
+          <div class="bars">
+            <div class="bar-row"><span>Correto</span><div class="track"><div class="fill ok" id="barCorreto"></div></div><span id="pctCorreto">0%</span></div>
+            <div class="bar-row"><span>Faltante</span><div class="track"><div class="fill fal" id="barFaltante"></div></div><span id="pctFaltante">0%</span></div>
+            <div class="bar-row"><span>Pendente</span><div class="track"><div class="fill pen" id="barPendente"></div></div><span id="pctPendente">0%</span></div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel">
+            <h2>Top auditores</h2>
+            <table>
+              <thead><tr><th>Auditor</th><th>Total</th></tr></thead>
+              <tbody id="auditoresBody"><tr><td colspan="2">Envie um CSV para carregar.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h2>Top contêineres</h2>
+            <table>
+              <thead><tr><th>Contenedor</th><th>Total</th></tr></thead>
+              <tbody id="containersBody"><tr><td colspan="2">Envie um CSV para carregar.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Registros da auditoria</h2>
+        <input class="search" id="searchInput" placeholder="Buscar shipment, contenedor, status ou auditor..." />
+        <table>
+          <thead>
+            <tr>
+              <th>Shipment</th>
+              <th class="hide-mobile">Data</th>
+              <th>Contenedor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"><tr><td colspan="4">Nenhum dado carregado.</td></tr></tbody>
+        </table>
+        <div class="footer-note" id="rowCount">Exibindo 0 registros</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const FIREBASE_URL = 'https://reportinventario-default-rtdb.firebaseio.com/auditoria_carrinhos_spa1.json';
+    let rows = [];
+    let filteredRows = [];
+
+    const nf = new Intl.NumberFormat('pt-BR');
+    const pctf = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+
+    const el = id => document.getElementById(id);
+    const norm = v => String(v ?? '').trim();
+
+    function parseCSV(text){
+      text = text.replace(/^\uFEFF/, '');
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+      if(!lines.length) return [];
+
+      const parseLine = line => {
+        const out = [];
+        let cur = '', q = false;
+        for(let i=0;i<line.length;i++){
+          const c = line[i], n = line[i+1];
+          if(c === '"' && q && n === '"'){ cur += '"'; i++; }
+          else if(c === '"'){ q = !q; }
+          else if(c === ',' && !q){ out.push(cur); cur = ''; }
+          else cur += c;
+        }
+        out.push(cur);
+        return out.map(s => s.trim());
+      };
+
+      const headers = parseLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
+      return lines.slice(1).map(line => {
+        const values = parseLine(line);
+        const obj = {};
+        headers.forEach((h,i) => obj[h] = values[i] ?? '');
+        return {
+          shipment: norm(obj['Shipment ID']),
+          data: norm(obj['Data auditoria']),
+          contenedor: norm(obj['Contenedor']),
+          estado: norm(obj['Estado']),
+          auditor: norm(obj['Rep auditoria'])
+        };
+      }).filter(r => r.shipment || r.data || r.contenedor || r.estado || r.auditor);
+    }
+
+    function countBy(arr, key){
+      return arr.reduce((acc,r) => {
+        const k = norm(r[key]) || 'Não informado';
+        acc[k] = (acc[k] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function topList(obj, limit=8){
+      return Object.entries(obj).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0])).slice(0,limit);
+    }
+
+    function setValue(id, value){ el(id).textContent = value; }
+
+    function updateDashboard(data){
+      rows = Array.isArray(data) ? data : [];
+      filteredRows = rows.slice();
+
+      const total = rows.length;
+      const corretos = rows.filter(r => r.estado.toLowerCase() === 'correto').length;
+      const faltantes = rows.filter(r => r.estado.toLowerCase() === 'faltante').length;
+      const pendentes = rows.filter(r => r.estado.toLowerCase() === 'pendente').length;
+      const containers = new Set(rows.map(r => r.contenedor).filter(Boolean)).size;
+      const acur = total ? (corretos / total * 100) : 0;
+
+      setValue('total', nf.format(total));
+      setValue('corretos', nf.format(corretos));
+      setValue('faltantes', nf.format(faltantes));
+      setValue('pendentes', nf.format(pendentes));
+      setValue('containers', nf.format(containers));
+      setValue('acuracidade', pctf.format(acur) + '%');
+
+      setBars(corretos, faltantes, pendentes, total);
+      renderTop('auditoresBody', topList(countBy(rows,'auditor')));
+      renderTop('containersBody', topList(countBy(rows,'contenedor')));
+      renderRows(filteredRows);
+    }
+
+    function setBars(corretos, faltantes, pendentes, total){
+      const vals = [
+        ['Correto', corretos, 'barCorreto', 'pctCorreto'],
+        ['Faltante', faltantes, 'barFaltante', 'pctFaltante'],
+        ['Pendente', pendentes, 'barPendente', 'pctPendente']
+      ];
+      vals.forEach(([_,v,bar,pct]) => {
+        const p = total ? v / total * 100 : 0;
+        el(bar).style.width = p + '%';
+        el(pct).textContent = pctf.format(p) + '%';
+      });
+    }
+
+    function renderTop(tbodyId, items){
+      const body = el(tbodyId);
+      if(!items.length){
+        body.innerHTML = '<tr><td colspan="2">Sem dados.</td></tr>';
+        return;
+      }
+      body.innerHTML = items.map(([name,total]) =>
+        '<tr><td title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</td><td><strong>'+nf.format(total)+'</strong></td></tr>'
+      ).join('');
+    }
+
+    function renderRows(list){
+      const body = el('rowsBody');
+      const sample = list.slice(0,80);
+      if(!sample.length){
+        body.innerHTML = '<tr><td colspan="4">Nenhum registro encontrado.</td></tr>';
+      }else{
+        body.innerHTML = sample.map(r => {
+          const estado = escapeHtml(r.estado || 'Não informado');
+          return '<tr title="'+escapeHtml(r.auditor)+'">' +
+            '<td>'+escapeHtml(r.shipment)+'</td>' +
+            '<td class="hide-mobile">'+escapeHtml(r.data)+'</td>' +
+            '<td>'+escapeHtml(r.contenedor)+'</td>' +
+            '<td><span class="badge '+estado+'">'+estado+'</span></td>' +
+          '</tr>';
+        }).join('');
+      }
+      el('rowCount').textContent = 'Exibindo ' + nf.format(sample.length) + ' de ' + nf.format(list.length) + ' registros';
+    }
+
+    function escapeHtml(s){
+      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    async function saveFirebase(payload){
+      el('firebaseStatus').textContent = 'Firebase: salvando...';
+      const body = {
+        atualizadoEm: new Date().toISOString(),
+        totalRegistros: payload.length,
+        dados: payload
+      };
+      const res = await fetch(FIREBASE_URL, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+      });
+      if(!res.ok) throw new Error('Falha ao salvar no Firebase');
+      el('firebaseStatus').textContent = 'Firebase: salvo automaticamente';
+      el('lastUpdate').textContent = 'Última atualização: ' + new Date().toLocaleString('pt-BR');
+    }
+
+    async function loadFirebase(){
+      try{
+        const res = await fetch(FIREBASE_URL);
+        if(!res.ok) throw new Error('Não foi possível consultar Firebase');
+        const data = await res.json();
+        if(data && Array.isArray(data.dados)){
+          updateDashboard(data.dados);
+          el('firebaseStatus').textContent = 'Firebase: dados carregados';
+          if(data.atualizadoEm){
+            el('lastUpdate').textContent = 'Última atualização: ' + new Date(data.atualizadoEm).toLocaleString('pt-BR');
+          }
+        }else{
+          el('firebaseStatus').textContent = 'Firebase: sem dados salvos';
+        }
+      }catch(e){
+        el('firebaseStatus').textContent = 'Firebase: verifique regras de acesso';
+      }
+    }
+
+    el('csvInput').addEventListener('change', async ev => {
+      const file = ev.target.files[0];
+      if(!file) return;
+      el('fileName').textContent = 'Arquivo: ' + file.name;
+      const text = await file.text();
+      const parsed = parseCSV(text);
+      updateDashboard(parsed);
+      try{
+        await saveFirebase(parsed);
+      }catch(e){
+        el('firebaseStatus').textContent = 'Firebase: erro ao salvar';
+        alert('CSV carregado no painel, mas não foi possível salvar no Firebase. Verifique as regras públicas de escrita/leitura.');
+      }
+    });
+
+    el('searchInput').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase().trim();
+      filteredRows = !q ? rows.slice() : rows.filter(r =>
+        [r.shipment,r.data,r.contenedor,r.estado,r.auditor].some(v => String(v).toLowerCase().includes(q))
+      );
+      renderRows(filteredRows);
+    });
+
+    el('clearBtn').addEventListener('click', () => {
+      el('searchInput').value = '';
+      filteredRows = rows.slice();
+      renderRows(filteredRows);
+    });
+
+    el('printBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    loadFirebase();
+  </script>
+</body>
+</html>
+'''
+with open('dashboard_auditoria_carrinhos_spa1.html', 'w', encoding='utf-8') as f:
+    f.write(html)
