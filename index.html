@@ -1,554 +1,973 @@
-html = r'''<!doctype html>
+html = r'''<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auditoria de Carrinhos SPA1</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
-    :root{
-      --azul:#002961;
-      --azul-2:#073a82;
-      --azul-3:#eaf1fb;
-      --bg:#f3f6fb;
-      --card:#ffffff;
-      --texto:#182033;
-      --muted:#6b7280;
-      --verde:#17a673;
-      --vermelho:#d93636;
-      --laranja:#f59e0b;
-      --borda:#dbe3ef;
-      --sombra:0 14px 35px rgba(0,41,97,.12);
+    :root {
+      --primary: #002961;
+      --primary-2: #06418f;
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #132033;
+      --muted: #6b7280;
+      --green: #18a058;
+      --red: #e5484d;
+      --orange: #f59e0b;
+      --blue: #2563eb;
+      --shadow: 0 16px 40px rgba(0, 41, 97, .12);
+      --shadow-hover: 0 22px 55px rgba(0, 41, 97, .22);
+      --radius: 22px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:linear-gradient(135deg,#f4f7fb 0%,#eef4fb 100%);
-      color:var(--texto);
+
+    * {
+      box-sizing: border-box;
     }
-    .app{
-      width:min(1440px,100%);
-      margin:0 auto;
-      padding:22px;
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 41, 97, .13), transparent 34%),
+        linear-gradient(135deg, #eef4ff 0%, #f8fafc 52%, #eaf0f8 100%);
+      min-height: 100vh;
     }
-    .topbar{
-      background:linear-gradient(135deg,var(--azul),var(--azul-2));
-      color:white;
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--sombra);
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:18px;
-      align-items:center;
+
+    .app {
+      width: min(1480px, 96vw);
+      margin: 0 auto;
+      padding: 22px 0 36px;
     }
-    .topbar h1{
-      margin:0;
-      font-size:clamp(26px,4vw,46px);
-      letter-spacing:-.7px;
-      font-weight:900;
+
+    .topbar {
+      background: linear-gradient(135deg, var(--primary), #001936);
+      color: #fff;
+      border-radius: 26px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 18px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
     }
-    .topbar p{
-      margin:8px 0 0;
-      color:rgba(255,255,255,.88);
-      font-size:clamp(14px,2vw,18px);
-      font-weight:600;
+
+    .topbar::after {
+      content: "";
+      position: absolute;
+      inset: -40% -12% auto auto;
+      width: 380px;
+      height: 380px;
+      background: rgba(255,255,255,.08);
+      border-radius: 50%;
     }
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+
+    .brand {
+      position: relative;
+      z-index: 1;
     }
-    button,.file-label{
-      border:0;
-      background:white;
-      color:var(--azul);
-      padding:12px 16px;
-      border-radius:14px;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow:0 8px 18px rgba(0,0,0,.12);
-      transition:.2s ease;
-      font-size:14px;
-      white-space:nowrap;
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 42px);
+      letter-spacing: -.04em;
+      line-height: 1.05;
     }
-    button:hover,.file-label:hover{
-      transform:translateY(-2px);
-      box-shadow:0 12px 22px rgba(0,0,0,.18);
+
+    .brand p {
+      margin: 10px 0 0;
+      color: rgba(255,255,255,.82);
+      font-size: 15px;
     }
-    input[type=file]{display:none}
-    .status{
-      margin-top:14px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      color:rgba(255,255,255,.95);
-      font-size:13px;
-      font-weight:700;
+
+    .actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
     }
-    .pill{
-      background:rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
-      padding:8px 12px;
-      border-radius:999px;
+
+    .upload-label,
+    button {
+      border: 0;
+      cursor: pointer;
+      border-radius: 15px;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 13px 16px;
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 10px 25px rgba(0,0,0,.13);
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      white-space: nowrap;
     }
-    .grid-cards{
-      display:grid;
-      grid-template-columns:repeat(6,1fr);
-      gap:16px;
-      margin:18px 0;
+
+    .upload-label:hover,
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 35px rgba(0,0,0,.18);
+      filter: brightness(1.03);
     }
-    .card{
-      background:var(--card);
-      border:1px solid var(--borda);
-      border-radius:22px;
-      padding:18px;
-      box-shadow:0 10px 24px rgba(0,41,97,.08);
-      transition:.22s ease;
-      position:relative;
-      overflow:hidden;
+
+    .upload-label input {
+      display: none;
     }
-    .card::before{
-      content:"";
-      position:absolute;
-      top:0;left:0;right:0;
-      height:5px;
-      background:var(--azul);
+
+    .btn-primary {
+      background: var(--primary-2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.22);
     }
-    .card:hover{
-      transform:translateY(-5px) scale(1.01);
-      box-shadow:0 18px 38px rgba(0,41,97,.16);
-      border-color:rgba(0,41,97,.28);
+
+    .status {
+      width: 100%;
+      text-align: right;
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      min-height: 17px;
     }
-    .card .label{
-      color:var(--muted);
-      font-size:13px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.4px;
+
+    .dashboard {
+      margin-top: 18px;
     }
-    .card .value{
-      margin-top:10px;
-      font-size:clamp(25px,3.5vw,40px);
-      font-weight:900;
-      color:var(--azul);
-      line-height:1;
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
     }
-    .card .hint{
-      margin-top:9px;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:700;
+
+    .card {
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 41, 97, .08);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      min-height: 138px;
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .main{
-      display:grid;
-      grid-template-columns:1.2fr .8fr;
-      gap:16px;
+
+    .card::before {
+      content: "";
+      position: absolute;
+      height: 5px;
+      left: 0;
+      right: 0;
+      top: 0;
+      background: var(--primary);
     }
-    .panel{
-      background:white;
-      border:1px solid var(--borda);
-      border-radius:24px;
-      padding:18px;
-      box-shadow:0 10px 24px rgba(0,41,97,.08);
-      transition:.2s ease;
+
+    .card:hover {
+      transform: translateY(-6px) scale(1.012);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(0, 41, 97, .28);
     }
-    .panel:hover{box-shadow:0 18px 36px rgba(0,41,97,.14)}
-    .panel h2{
-      margin:0 0 14px;
-      font-size:20px;
-      color:var(--azul);
+
+    .card .label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
     }
-    .bars{display:grid;gap:12px}
-    .bar-row{
-      display:grid;
-      grid-template-columns:110px 1fr 70px;
-      gap:10px;
-      align-items:center;
-      font-weight:800;
-      color:#334155;
+
+    .card .value {
+      font-size: clamp(27px, 3vw, 43px);
+      font-weight: 950;
+      letter-spacing: -.06em;
+      margin-top: 12px;
+      color: var(--primary);
     }
-    .track{
-      height:18px;
-      background:var(--azul-3);
-      border-radius:999px;
-      overflow:hidden;
-      border:1px solid #d5e1f2;
+
+    .card .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
     }
-    .fill{
-      height:100%;
-      border-radius:999px;
-      width:0%;
-      transition:width .7s cubic-bezier(.2,.8,.2,1);
+
+    .card.ok::before { background: var(--green); }
+    .card.bad::before { background: var(--red); }
+    .card.pending::before { background: var(--orange); }
+    .card.rep::before { background: var(--blue); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 16px;
+      margin-bottom: 16px;
     }
-    .fill.ok{background:var(--verde)}
-    .fill.fal{background:var(--vermelho)}
-    .fill.pen{background:var(--laranja)}
-    .split{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:16px;
-      margin-top:16px;
+
+    .panel {
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(0, 41, 97, .08);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      transition: transform .22s ease, box-shadow .22s ease;
+      overflow: hidden;
     }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      overflow:hidden;
-      border-radius:16px;
-      font-size:13px;
+
+    .panel:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
     }
-    th,td{
-      padding:11px 10px;
-      text-align:left;
-      border-bottom:1px solid #e8eef6;
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 14px;
+      margin-bottom: 12px;
     }
-    th{
-      background:var(--azul);
-      color:white;
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.35px;
+
+    .panel h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--primary);
+      letter-spacing: -.02em;
     }
-    tr:hover td{background:#f4f8fd}
-    .badge{
-      display:inline-block;
-      padding:5px 9px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:12px;
+
+    .panel small {
+      color: var(--muted);
+      display: block;
+      margin-top: 4px;
     }
-    .badge.Correto{background:#dff7ee;color:#087a52}
-    .badge.Faltante{background:#ffe4e4;color:#a41919}
-    .badge.Pendente{background:#fff1d6;color:#9a5c00}
-    .footer-note{
-      color:var(--muted);
-      font-size:12px;
-      margin-top:12px;
-      font-weight:700;
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 470px;
+      border-radius: 16px;
+      border: 1px solid #e7edf6;
     }
-    .search{
-      width:100%;
-      border:1px solid var(--borda);
-      border-radius:14px;
-      padding:12px 14px;
-      font-size:14px;
-      outline:none;
-      margin-bottom:12px;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #fff;
     }
-    .search:focus{border-color:var(--azul);box-shadow:0 0 0 4px rgba(0,41,97,.09)}
-    #printArea{background:transparent}
-    @media(max-width:1100px){
-      .grid-cards{grid-template-columns:repeat(3,1fr)}
-      .main{grid-template-columns:1fr}
+
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid #eef2f7;
+      text-align: left;
+      font-size: 13px;
     }
-    @media(max-width:700px){
-      .app{padding:12px}
-      .topbar{
-        grid-template-columns:1fr;
-        border-radius:18px;
-        padding:18px;
+
+    th {
+      background: var(--primary);
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    tbody tr {
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    tbody tr:hover {
+      background: #eef5ff;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .badge.Correto {
+      color: #087443;
+      background: #dff8eb;
+    }
+
+    .badge.Faltante {
+      color: #a01822;
+      background: #ffe3e5;
+    }
+
+    .badge.Pendente {
+      color: #9a5b00;
+      background: #fff0cf;
+    }
+
+    .ranking-list {
+      display: grid;
+      gap: 10px;
+      max-height: 430px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .rank-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 15px;
+      background: #f8fbff;
+      border: 1px solid #e6eef8;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .rank-item:hover {
+      transform: translateX(4px);
+      background: #edf5ff;
+    }
+
+    .rank-name {
+      font-weight: 850;
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rank-meta {
+      margin-top: 5px;
+      height: 7px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .rank-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      border-radius: 999px;
+    }
+
+    .rank-count {
+      font-weight: 950;
+      color: var(--primary);
+      font-size: 18px;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-height: 360px;
+    }
+
+    .footer-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .empty {
+      padding: 28px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 18px;
+      color: var(--muted);
+      background: #f8fafc;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1120px) {
+      .cards {
+        grid-template-columns: repeat(3, 1fr);
       }
-      .actions{justify-content:flex-start}
-      button,.file-label{width:100%;text-align:center}
-      .grid-cards{grid-template-columns:1fr 1fr;gap:10px}
-      .card{padding:14px;border-radius:18px}
-      .split{grid-template-columns:1fr}
-      .bar-row{grid-template-columns:88px 1fr 52px;font-size:12px}
-      th,td{padding:9px 7px;font-size:12px}
-      .hide-mobile{display:none}
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
-    @media(max-width:430px){
-      .grid-cards{grid-template-columns:1fr}
+
+    @media (max-width: 760px) {
+      .app {
+        width: min(100% - 22px, 1480px);
+        padding-top: 11px;
+      }
+      .topbar {
+        grid-template-columns: 1fr;
+        padding: 19px;
+        border-radius: 20px;
+      }
+      .actions {
+        justify-content: stretch;
+      }
+      .upload-label,
+      button {
+        flex: 1 1 100%;
+        justify-content: center;
+      }
+      .status {
+        text-align: left;
+      }
+      .cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 11px;
+      }
+      .card {
+        padding: 15px;
+        min-height: 118px;
+        border-radius: 18px;
+      }
+      .card .label {
+        font-size: 11px;
+      }
+      .card .value {
+        font-size: 30px;
+      }
+      .panel {
+        padding: 14px;
+        border-radius: 18px;
+      }
+      .panel-header {
+        display: block;
+      }
+      table {
+        min-width: 680px;
+      }
     }
-    @media print{
-      body{background:white}
-      .actions,.search{display:none!important}
-      .app{padding:0}
-      .topbar,.card,.panel{box-shadow:none}
+
+    @media (max-width: 460px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+      .brand p {
+        font-size: 13px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+      .actions {
+        display: none;
+      }
+      .app {
+        width: 100%;
+      }
+      .topbar,
+      .card,
+      .panel {
+        box-shadow: none;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="app" id="printArea">
+  <main class="app" id="captureArea">
     <section class="topbar">
-      <div>
+      <div class="brand">
         <h1>Auditoria de Carrinhos SPA1</h1>
         <p>Suporte: Ezequiel Miranda</p>
-        <div class="status">
-          <span class="pill" id="firebaseStatus">Firebase: aguardando dados</span>
-          <span class="pill" id="lastUpdate">Última atualização: --</span>
-          <span class="pill" id="fileName">Arquivo: nenhum</span>
-        </div>
       </div>
       <div class="actions">
-        <label class="file-label" for="csvInput">Enviar CSV</label>
-        <input id="csvInput" type="file" accept=".csv,text/csv" />
-        <button id="printBtn" type="button">Print WhatsApp</button>
-        <button id="clearBtn" type="button">Limpar busca</button>
+        <label class="upload-label">
+          📤 Upload CSV
+          <input type="file" id="csvFile" accept=".csv,text/csv" />
+        </label>
+        <button class="btn-primary" id="printBtn">🖼️ Print HD</button>
+        <button id="reloadBtn">🔄 Recarregar nuvem</button>
+        <div class="status" id="statusText">Aguardando arquivo ou dados salvos na nuvem...</div>
       </div>
     </section>
 
-    <section class="grid-cards">
-      <div class="card"><div class="label">Total auditado</div><div class="value" id="total">0</div><div class="hint">Linhas válidas do CSV</div></div>
-      <div class="card"><div class="label">Corretos</div><div class="value" id="corretos">0</div><div class="hint">Estado = Correto</div></div>
-      <div class="card"><div class="label">Faltantes</div><div class="value" id="faltantes">0</div><div class="hint">Estado = Faltante</div></div>
-      <div class="card"><div class="label">Pendentes</div><div class="value" id="pendentes">0</div><div class="hint">Estado = Pendente</div></div>
-      <div class="card"><div class="label">Contêineres</div><div class="value" id="containers">0</div><div class="hint">Contenedor únicos</div></div>
-      <div class="card"><div class="label">Acuracidade</div><div class="value" id="acuracidade">0%</div><div class="hint">Corretos / Total</div></div>
-    </section>
+    <section class="dashboard">
+      <div class="cards">
+        <article class="card">
+          <div class="label">Total auditado</div>
+          <div class="value" id="totalCard">0</div>
+          <div class="hint">linhas válidas no CSV</div>
+        </article>
+        <article class="card ok">
+          <div class="label">Corretos</div>
+          <div class="value" id="corretoCard">0</div>
+          <div class="hint" id="corretoPct">0%</div>
+        </article>
+        <article class="card bad">
+          <div class="label">Faltantes</div>
+          <div class="value" id="faltanteCard">0</div>
+          <div class="hint" id="faltantePct">0%</div>
+        </article>
+        <article class="card pending">
+          <div class="label">Pendentes</div>
+          <div class="value" id="pendenteCard">0</div>
+          <div class="hint" id="pendentePct">0%</div>
+        </article>
+        <article class="card rep">
+          <div class="label">Auditores</div>
+          <div class="value" id="repCard">0</div>
+          <div class="hint">representantes únicos</div>
+        </article>
+      </div>
 
-    <section class="main">
-      <div>
-        <div class="panel">
-          <h2>Resumo por status</h2>
-          <div class="bars">
-            <div class="bar-row"><span>Correto</span><div class="track"><div class="fill ok" id="barCorreto"></div></div><span id="pctCorreto">0%</span></div>
-            <div class="bar-row"><span>Faltante</span><div class="track"><div class="fill fal" id="barFaltante"></div></div><span id="pctFaltante">0%</span></div>
-            <div class="bar-row"><span>Pendente</span><div class="track"><div class="fill pen" id="barPendente"></div></div><span id="pctPendente">0%</span></div>
+      <div class="grid">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Distribuição por Estado</h2>
+              <small>Valores calculados diretamente do CSV carregado</small>
+            </div>
+          </div>
+          <canvas id="estadoChart"></canvas>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Top auditores</h2>
+              <small>Ranking por quantidade de auditorias</small>
+            </div>
+          </div>
+          <div id="rankingList" class="ranking-list"></div>
+        </section>
+      </div>
+
+      <div class="grid">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Auditorias por hora</h2>
+              <small>Baseado na coluna Data auditoria</small>
+            </div>
+          </div>
+          <canvas id="horaChart"></canvas>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Resumo por contêiner</h2>
+              <small>Contêineres com maior volume</small>
+            </div>
+          </div>
+          <canvas id="containerChart"></canvas>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Base auditada</h2>
+            <small id="tableSubtitle">Nenhum CSV carregado ainda</small>
           </div>
         </div>
-
-        <div class="split">
-          <div class="panel">
-            <h2>Top auditores</h2>
-            <table>
-              <thead><tr><th>Auditor</th><th>Total</th></tr></thead>
-              <tbody id="auditoresBody"><tr><td colspan="2">Envie um CSV para carregar.</td></tr></tbody>
-            </table>
-          </div>
-          <div class="panel">
-            <h2>Top contêineres</h2>
-            <table>
-              <thead><tr><th>Contenedor</th><th>Total</th></tr></thead>
-              <tbody id="containersBody"><tr><td colspan="2">Envie um CSV para carregar.</td></tr></tbody>
-            </table>
-          </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Shipment ID</th>
+                <th>Data auditoria</th>
+                <th>Contenedor</th>
+                <th>Estado</th>
+                <th>Rep auditoria</th>
+              </tr>
+            </thead>
+            <tbody id="dataTable">
+              <tr><td colspan="5"><div class="empty">Faça upload do CSV para atualizar o painel.</div></td></tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-
-      <div class="panel">
-        <h2>Registros da auditoria</h2>
-        <input class="search" id="searchInput" placeholder="Buscar shipment, contenedor, status ou auditor..." />
-        <table>
-          <thead>
-            <tr>
-              <th>Shipment</th>
-              <th class="hide-mobile">Data</th>
-              <th>Contenedor</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="rowsBody"><tr><td colspan="4">Nenhum dado carregado.</td></tr></tbody>
-        </table>
-        <div class="footer-note" id="rowCount">Exibindo 0 registros</div>
-      </div>
+        <div class="footer-info">
+          <span id="lastUpdate">Última atualização: --</span>
+          <span>Firebase: reportinventario-default-rtdb.firebaseio.com</span>
+        </div>
+      </section>
     </section>
-  </div>
+  </main>
 
   <script>
-    const FIREBASE_URL = 'https://reportinventario-default-rtdb.firebaseio.com/auditoria_carrinhos_spa1.json';
-    let rows = [];
-    let filteredRows = [];
+    const FIREBASE_URL = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
 
-    const nf = new Intl.NumberFormat('pt-BR');
-    const pctf = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    let currentRows = [];
+    let charts = {};
 
-    const el = id => document.getElementById(id);
-    const norm = v => String(v ?? '').trim();
+    const $ = (id) => document.getElementById(id);
+    const nfBR = new Intl.NumberFormat("pt-BR");
+    const fmt = (value) => nfBR.format(Number(value) || 0);
 
-    function parseCSV(text){
-      text = text.replace(/^\uFEFF/, '');
-      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-      if(!lines.length) return [];
+    const normalize = (s) => String(s || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
 
-      const parseLine = line => {
-        const out = [];
-        let cur = '', q = false;
-        for(let i=0;i<line.length;i++){
-          const c = line[i], n = line[i+1];
-          if(c === '"' && q && n === '"'){ cur += '"'; i++; }
-          else if(c === '"'){ q = !q; }
-          else if(c === ',' && !q){ out.push(cur); cur = ''; }
-          else cur += c;
-        }
-        out.push(cur);
-        return out.map(s => s.trim());
-      };
-
-      const headers = parseLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
-      return lines.slice(1).map(line => {
-        const values = parseLine(line);
-        const obj = {};
-        headers.forEach((h,i) => obj[h] = values[i] ?? '');
-        return {
-          shipment: norm(obj['Shipment ID']),
-          data: norm(obj['Data auditoria']),
-          contenedor: norm(obj['Contenedor']),
-          estado: norm(obj['Estado']),
-          auditor: norm(obj['Rep auditoria'])
-        };
-      }).filter(r => r.shipment || r.data || r.contenedor || r.estado || r.auditor);
+    function setStatus(message) {
+      $("statusText").textContent = message;
     }
 
-    function countBy(arr, key){
-      return arr.reduce((acc,r) => {
-        const k = norm(r[key]) || 'Não informado';
-        acc[k] = (acc[k] || 0) + 1;
+    function parseCSV(text) {
+      text = text.replace(/^\uFEFF/, "");
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && inQuotes && next === '"') {
+          field += '"';
+          i++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          row.push(field);
+          field = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i++;
+          row.push(field);
+          if (row.some(cell => String(cell).trim() !== "")) rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+
+      if (field.length || row.length) {
+        row.push(field);
+        if (row.some(cell => String(cell).trim() !== "")) rows.push(row);
+      }
+
+      if (!rows.length) return [];
+
+      const headers = rows[0].map(h => h.replace(/^\uFEFF/, "").trim());
+      return rows.slice(1).map(cols => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = (cols[i] || "").trim());
+        return {
+          shipmentId: obj["Shipment ID"] || obj["shipmentId"] || "",
+          dataAuditoria: obj["Data auditoria"] || obj["dataAuditoria"] || "",
+          contenedor: obj["Contenedor"] || obj["contenedor"] || "",
+          estado: obj["Estado"] || obj["estado"] || "",
+          repAuditoria: obj["Rep auditoria"] || obj["repAuditoria"] || ""
+        };
+      }).filter(r => r.shipmentId || r.dataAuditoria || r.contenedor || r.estado || r.repAuditoria);
+    }
+
+    function countBy(rows, key) {
+      return rows.reduce((acc, row) => {
+        const value = row[key] || "Não informado";
+        acc[value] = (acc[value] || 0) + 1;
         return acc;
       }, {});
     }
 
-    function topList(obj, limit=8){
-      return Object.entries(obj).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0])).slice(0,limit);
+    function parseDateBR(dateStr) {
+      const m = String(dateStr || "").match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+      if (!m) return null;
+      return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), Number(m[4]), Number(m[5]), Number(m[6]));
     }
 
-    function setValue(id, value){ el(id).textContent = value; }
-
-    function updateDashboard(data){
-      rows = Array.isArray(data) ? data : [];
-      filteredRows = rows.slice();
-
-      const total = rows.length;
-      const corretos = rows.filter(r => r.estado.toLowerCase() === 'correto').length;
-      const faltantes = rows.filter(r => r.estado.toLowerCase() === 'faltante').length;
-      const pendentes = rows.filter(r => r.estado.toLowerCase() === 'pendente').length;
-      const containers = new Set(rows.map(r => r.contenedor).filter(Boolean)).size;
-      const acur = total ? (corretos / total * 100) : 0;
-
-      setValue('total', nf.format(total));
-      setValue('corretos', nf.format(corretos));
-      setValue('faltantes', nf.format(faltantes));
-      setValue('pendentes', nf.format(pendentes));
-      setValue('containers', nf.format(containers));
-      setValue('acuracidade', pctf.format(acur) + '%');
-
-      setBars(corretos, faltantes, pendentes, total);
-      renderTop('auditoresBody', topList(countBy(rows,'auditor')));
-      renderTop('containersBody', topList(countBy(rows,'contenedor')));
-      renderRows(filteredRows);
+    function pct(value, total) {
+      return total ? ((value / total) * 100).toFixed(1).replace(".", ",") + "%" : "0%";
     }
 
-    function setBars(corretos, faltantes, pendentes, total){
-      const vals = [
-        ['Correto', corretos, 'barCorreto', 'pctCorreto'],
-        ['Faltante', faltantes, 'barFaltante', 'pctFaltante'],
-        ['Pendente', pendentes, 'barPendente', 'pctPendente']
-      ];
-      vals.forEach(([_,v,bar,pct]) => {
-        const p = total ? v / total * 100 : 0;
-        el(bar).style.width = p + '%';
-        el(pct).textContent = pctf.format(p) + '%';
+    function sortedEntries(obj) {
+      return Object.entries(obj).sort((a, b) => b[1] - a[1]);
+    }
+
+    function destroyChart(id) {
+      if (charts[id]) {
+        charts[id].destroy();
+        delete charts[id];
+      }
+    }
+
+    function renderCharts(rows) {
+      const estadoCounts = countBy(rows, "estado");
+      const estadoLabels = ["Correto", "Faltante", "Pendente"].filter(k => estadoCounts[k]);
+      Object.keys(estadoCounts).forEach(k => {
+        if (!estadoLabels.includes(k)) estadoLabels.push(k);
+      });
+
+      destroyChart("estadoChart");
+      charts.estadoChart = new Chart($("estadoChart"), {
+        type: "doughnut",
+        data: {
+          labels: estadoLabels,
+          datasets: [{
+            data: estadoLabels.map(k => estadoCounts[k] || 0),
+            backgroundColor: estadoLabels.map(k => {
+              if (normalize(k) === "correto") return "#18a058";
+              if (normalize(k) === "faltante") return "#e5484d";
+              if (normalize(k) === "pendente") return "#f59e0b";
+              return "#002961";
+            }),
+            borderColor: "#ffffff",
+            borderWidth: 4,
+            hoverOffset: 14
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true, font: { weight: "bold" } } },
+            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.raw)} (${pct(ctx.raw, rows.length)})` } }
+          },
+          animation: { duration: 900, easing: "easeOutQuart" }
+        }
+      });
+
+      const hourCounts = {};
+      rows.forEach(row => {
+        const d = parseDateBR(row.dataAuditoria);
+        const h = d ? String(d.getHours()).padStart(2, "0") + "h" : "Sem hora";
+        hourCounts[h] = (hourCounts[h] || 0) + 1;
+      });
+      const hourLabels = Object.keys(hourCounts).sort((a, b) => parseInt(a) - parseInt(b));
+
+      destroyChart("horaChart");
+      charts.horaChart = new Chart($("horaChart"), {
+        type: "bar",
+        data: {
+          labels: hourLabels,
+          datasets: [{
+            label: "Auditorias",
+            data: hourLabels.map(h => hourCounts[h]),
+            backgroundColor: "#002961",
+            borderRadius: 12,
+            hoverBackgroundColor: "#06418f"
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, ticks: { precision: 0, callback: value => fmt(value) } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `Auditorias: ${fmt(ctx.raw)}` } }
+          },
+          animation: { duration: 800, easing: "easeOutQuart" }
+        }
+      });
+
+      const containerTop = sortedEntries(countBy(rows, "contenedor")).slice(0, 10);
+
+      destroyChart("containerChart");
+      charts.containerChart = new Chart($("containerChart"), {
+        type: "bar",
+        data: {
+          labels: containerTop.map(([k]) => k),
+          datasets: [{
+            label: "Registros",
+            data: containerTop.map(([, v]) => v),
+            backgroundColor: "#002961",
+            borderRadius: 12,
+            hoverBackgroundColor: "#06418f"
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0, callback: value => fmt(value) } },
+            y: { grid: { display: false } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `Registros: ${fmt(ctx.raw)}` } }
+          },
+          animation: { duration: 800, easing: "easeOutQuart" }
+        }
       });
     }
 
-    function renderTop(tbodyId, items){
-      const body = el(tbodyId);
-      if(!items.length){
-        body.innerHTML = '<tr><td colspan="2">Sem dados.</td></tr>';
+    function renderRanking(rows) {
+      const ranking = sortedEntries(countBy(rows, "repAuditoria")).slice(0, 15);
+      const max = ranking[0]?.[1] || 1;
+      $("rankingList").innerHTML = ranking.length ? ranking.map(([name, count]) => `
+        <div class="rank-item" title="${escapeHTML(name)}: ${fmt(count)} auditoria(s)">
+          <div>
+            <div class="rank-name">${escapeHTML(name)}</div>
+            <div class="rank-meta"><div class="rank-bar" style="width:${Math.max(6, (count / max) * 100)}%"></div></div>
+          </div>
+          <div class="rank-count">${fmt(count)}</div>
+        </div>
+      `).join("") : `<div class="empty">Sem dados para ranking.</div>`;
+    }
+
+    function renderTable(rows) {
+      const body = $("dataTable");
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="5"><div class="empty">Faça upload do CSV para atualizar o painel.</div></td></tr>`;
+        $("tableSubtitle").textContent = "Nenhum CSV carregado ainda";
         return;
       }
-      body.innerHTML = items.map(([name,total]) =>
-        '<tr><td title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</td><td><strong>'+nf.format(total)+'</strong></td></tr>'
-      ).join('');
+
+      body.innerHTML = rows.map(row => `
+        <tr>
+          <td>${escapeHTML(row.shipmentId)}</td>
+          <td>${escapeHTML(row.dataAuditoria)}</td>
+          <td>${escapeHTML(row.contenedor)}</td>
+          <td><span class="badge ${escapeClass(row.estado)}">${escapeHTML(row.estado || "Não informado")}</span></td>
+          <td>${escapeHTML(row.repAuditoria)}</td>
+        </tr>
+      `).join("");
+
+      $("tableSubtitle").textContent = `${fmt(rows.length)} registro(s) exibidos`;
     }
 
-    function renderRows(list){
-      const body = el('rowsBody');
-      const sample = list.slice(0,80);
-      if(!sample.length){
-        body.innerHTML = '<tr><td colspan="4">Nenhum registro encontrado.</td></tr>';
-      }else{
-        body.innerHTML = sample.map(r => {
-          const estado = escapeHtml(r.estado || 'Não informado');
-          return '<tr title="'+escapeHtml(r.auditor)+'">' +
-            '<td>'+escapeHtml(r.shipment)+'</td>' +
-            '<td class="hide-mobile">'+escapeHtml(r.data)+'</td>' +
-            '<td>'+escapeHtml(r.contenedor)+'</td>' +
-            '<td><span class="badge '+estado+'">'+estado+'</span></td>' +
-          '</tr>';
-        }).join('');
-      }
-      el('rowCount').textContent = 'Exibindo ' + nf.format(sample.length) + ' de ' + nf.format(list.length) + ' registros';
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[c]));
     }
 
-    function escapeHtml(s){
-      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    function escapeClass(value) {
+      const n = normalize(value);
+      if (n === "correto") return "Correto";
+      if (n === "faltante") return "Faltante";
+      if (n === "pendente") return "Pendente";
+      return "";
     }
 
-    async function saveFirebase(payload){
-      el('firebaseStatus').textContent = 'Firebase: salvando...';
-      const body = {
-        atualizadoEm: new Date().toISOString(),
-        totalRegistros: payload.length,
-        dados: payload
+    function render(rows, sourceLabel = "CSV") {
+      currentRows = rows;
+
+      const total = rows.length;
+      const estadoCounts = countBy(rows, "estado");
+      const correto = Object.entries(estadoCounts).filter(([k]) => normalize(k) === "correto").reduce((a, [,v]) => a + v, 0);
+      const faltante = Object.entries(estadoCounts).filter(([k]) => normalize(k) === "faltante").reduce((a, [,v]) => a + v, 0);
+      const pendente = Object.entries(estadoCounts).filter(([k]) => normalize(k) === "pendente").reduce((a, [,v]) => a + v, 0);
+      const reps = new Set(rows.map(r => r.repAuditoria).filter(Boolean)).size;
+
+      $("totalCard").textContent = fmt(total);
+      $("corretoCard").textContent = fmt(correto);
+      $("faltanteCard").textContent = fmt(faltante);
+      $("pendenteCard").textContent = fmt(pendente);
+      $("repCard").textContent = fmt(reps);
+
+      $("corretoPct").textContent = pct(correto, total);
+      $("faltantePct").textContent = pct(faltante, total);
+      $("pendentePct").textContent = pct(pendente, total);
+
+      renderCharts(rows);
+      renderRanking(rows);
+      renderTable(rows);
+
+      const now = new Date();
+      $("lastUpdate").textContent = `Última atualização: ${now.toLocaleString("pt-BR")} • Origem: ${sourceLabel}`;
+    }
+
+    async function saveToFirebase(rows, fileName = "upload.csv") {
+      setStatus("Salvando automaticamente na nuvem...");
+      const payload = {
+        updatedAt: new Date().toISOString(),
+        fileName,
+        totalRows: rows.length,
+        rows
       };
-      const res = await fetch(FIREBASE_URL, {
-        method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(body)
+
+      const response = await fetch(FIREBASE_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error('Falha ao salvar no Firebase');
-      el('firebaseStatus').textContent = 'Firebase: salvo automaticamente';
-      el('lastUpdate').textContent = 'Última atualização: ' + new Date().toLocaleString('pt-BR');
+
+      if (!response.ok) throw new Error("Falha ao salvar no Firebase");
+      setStatus(`Salvo na nuvem com sucesso: ${fmt(rows.length)} registro(s).`);
     }
 
-    async function loadFirebase(){
-      try{
-        const res = await fetch(FIREBASE_URL);
-        if(!res.ok) throw new Error('Não foi possível consultar Firebase');
-        const data = await res.json();
-        if(data && Array.isArray(data.dados)){
-          updateDashboard(data.dados);
-          el('firebaseStatus').textContent = 'Firebase: dados carregados';
-          if(data.atualizadoEm){
-            el('lastUpdate').textContent = 'Última atualização: ' + new Date(data.atualizadoEm).toLocaleString('pt-BR');
-          }
-        }else{
-          el('firebaseStatus').textContent = 'Firebase: sem dados salvos';
+    async function loadFromFirebase() {
+      try {
+        setStatus("Carregando dados da nuvem...");
+        const response = await fetch(FIREBASE_URL);
+        if (!response.ok) throw new Error("Falha ao consultar Firebase");
+        const data = await response.json();
+
+        if (data && Array.isArray(data.rows) && data.rows.length) {
+          render(data.rows, "Firebase");
+          setStatus(`Dados carregados da nuvem: ${fmt(data.rows.length)} registro(s).`);
+        } else {
+          setStatus("Nenhum dado encontrado na nuvem. Faça upload do CSV.");
         }
-      }catch(e){
-        el('firebaseStatus').textContent = 'Firebase: verifique regras de acesso';
+      } catch (error) {
+        console.error(error);
+        setStatus("Não foi possível carregar da nuvem. Verifique conexão/permissão do Firebase.");
       }
     }
 
-    el('csvInput').addEventListener('change', async ev => {
-      const file = ev.target.files[0];
-      if(!file) return;
-      el('fileName').textContent = 'Arquivo: ' + file.name;
-      const text = await file.text();
-      const parsed = parseCSV(text);
-      updateDashboard(parsed);
-      try{
-        await saveFirebase(parsed);
-      }catch(e){
-        el('firebaseStatus').textContent = 'Firebase: erro ao salvar';
-        alert('CSV carregado no painel, mas não foi possível salvar no Firebase. Verifique as regras públicas de escrita/leitura.');
+    $("csvFile").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        setStatus("Lendo CSV...");
+        const text = await file.text();
+        const rows = parseCSV(text);
+
+        if (!rows.length) {
+          setStatus("CSV sem registros válidos.");
+          return;
+        }
+
+        render(rows, file.name);
+        await saveToFirebase(rows, file.name);
+      } catch (error) {
+        console.error(error);
+        setStatus("Erro ao processar/salvar CSV. Confira o modelo do arquivo.");
       }
     });
 
-    el('searchInput').addEventListener('input', e => {
-      const q = e.target.value.toLowerCase().trim();
-      filteredRows = !q ? rows.slice() : rows.filter(r =>
-        [r.shipment,r.data,r.contenedor,r.estado,r.auditor].some(v => String(v).toLowerCase().includes(q))
-      );
-      renderRows(filteredRows);
+    $("reloadBtn").addEventListener("click", loadFromFirebase);
+
+    $("printBtn").addEventListener("click", async () => {
+      try {
+        setStatus("Gerando imagem em alta resolução...");
+        const area = $("captureArea");
+        const canvas = await html2canvas(area, {
+          scale: Math.min(3, window.devicePixelRatio * 2 || 2),
+          backgroundColor: "#f3f6fb",
+          useCORS: true,
+          logging: false
+        });
+
+        const link = document.createElement("a");
+        const date = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+        link.download = `auditoria-carrinhos-spa1-${date}.png`;
+        link.href = canvas.toDataURL("image/png", 1.0);
+        link.click();
+
+        setStatus("Imagem HD salva. Pode enviar no WhatsApp.");
+      } catch (error) {
+        console.error(error);
+        setStatus("Erro ao gerar imagem. Tente novamente.");
+      }
     });
 
-    el('clearBtn').addEventListener('click', () => {
-      el('searchInput').value = '';
-      filteredRows = rows.slice();
-      renderRows(filteredRows);
-    });
-
-    el('printBtn').addEventListener('click', () => {
-      window.print();
-    });
-
-    loadFirebase();
+    loadFromFirebase();
   </script>
 </body>
 </html>
 '''
-with open('dashboard_auditoria_carrinhos_spa1.html', 'w', encoding='utf-8') as f:
+with open('index.html', 'w', encoding='utf-8') as f:
     f.write(html)
