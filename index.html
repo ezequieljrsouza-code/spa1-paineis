@@ -146,13 +146,23 @@
 
     /* ═══ KPI GRID ══════════════════════════════ */
     .kpi-grid {
-      display: grid; grid-template-columns: 210px 320px 210px;
-      gap: 12px; margin-bottom: 14px; justify-content: center;
+      display: grid;
+      grid-template-columns: 210px 320px 210px;
+      grid-template-rows: 1fr;
+      gap: 12px; margin-bottom: 14px;
+      justify-content: center;
+      align-items: stretch;
     }
-    .kpi-left, .kpi-right { display: flex; flex-direction: column; gap: 10px; }
+    /* Side columns: 2 equal rows so top/bottom cards align across both sides */
+    .kpi-left, .kpi-right {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
+    }
     .kpi-card {
       background: var(--card); border-radius: var(--radius); padding: 15px;
-      box-shadow: var(--shadow); border: var(--card-border); flex: 1;
+      box-shadow: var(--shadow); border: var(--card-border);
+      display: flex; flex-direction: column; justify-content: center;
     }
     .kpi-label {
       display: inline-block; background: var(--primary); color: #fff;
@@ -168,10 +178,15 @@
       font-size: clamp(32px, 3.5vw, 52px); font-weight: 900;
       color: var(--text); line-height: 1; letter-spacing: -.02em;
     }
-    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      /* stretch to fill the grid row */
+      align-items: stretch;
+    }
     .kpi-card-sm {
       background: var(--card); border-radius: var(--radius); padding: 12px 13px;
       box-shadow: var(--shadow); border: var(--card-border);
+      display: flex; flex-direction: column; justify-content: center;
     }
     .kpi-value-sm {
       font-family: 'Barlow Condensed', sans-serif;
