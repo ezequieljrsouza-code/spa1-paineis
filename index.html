@@ -11,503 +11,383 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary:   #002961;
-      --primary2:  #06418f;
-      --primary3:  #1a56db;
-      --accent:    #60a5fa;
-      --bg:        #eef3fb;
-      --card:      #ffffff;
-      --text:      #0f172a;
-      --muted:     #64748b;
-      --green:     #16a34a;
-      --red:       #dc2626;
-      --orange:    #d97706;
-      --shadow:    0 4px 18px rgba(0,41,97,.11);
-      --shadow2:   0 10px 36px rgba(0,41,97,.18);
-      --radius:    14px;
+      --primary:  #002961;
+      --primary2: #06418f;
+      --primary3: #1a56db;
+      --accent:   #60a5fa;
+      --bg:       #eef3fb;
+      --card:     #ffffff;
+      --text:     #0f172a;
+      --muted:    #64748b;
+      --green:    #16a34a;
+      --red:      #dc2626;
+      --orange:   #d97706;
+      --shadow:   0 4px 18px rgba(0,41,97,.11);
+      --shadow2:  0 10px 36px rgba(0,41,97,.18);
+      --radius:   14px;
+      --card-border: 2px solid rgba(0,41,97,.13);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    body {
-      font-family: 'Barlow', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ─── TAB NAV ─────────────────────────────────── */
-    .tab-nav {
+    /* ═══ TOP NAV ═══════════════════════════════ */
+    .top-nav {
       background: var(--primary);
-      display: flex;
-      align-items: stretch;
-      overflow-x: auto;
-      padding: 0 20px;
-      gap: 2px;
-      box-shadow: 0 4px 20px rgba(0,0,0,.25);
-      position: sticky;
-      top: 0;
-      z-index: 200;
-      scrollbar-width: none;
+      display: flex; align-items: stretch;
+      padding: 0 16px; gap: 2px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.28);
+      position: sticky; top: 0; z-index: 300;
+      scrollbar-width: none; overflow-x: auto;
     }
-    .tab-nav::-webkit-scrollbar { display: none; }
-
-    .tab-nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      color: #fff;
+    .top-nav::-webkit-scrollbar { display: none; }
+    .nav-brand {
+      display: flex; align-items: center; gap: 9px; color: #fff;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 17px;
-      font-weight: 900;
-      letter-spacing: .12em;
-      white-space: nowrap;
-      padding: 0 20px 0 4px;
-      border-right: 1px solid rgba(255,255,255,.18);
-      margin-right: 8px;
+      font-size: 17px; font-weight: 900; letter-spacing: .12em;
+      white-space: nowrap; padding: 0 18px 0 4px;
+      border-right: 1px solid rgba(255,255,255,.18); margin-right: 6px;
     }
-
     .tab-btn {
-      background: transparent;
-      border: none;
-      color: rgba(255,255,255,.68);
-      padding: 15px 18px;
-      font-family: 'Barlow', sans-serif;
-      font-size: 13.5px;
-      font-weight: 700;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-      transition: all .2s;
-      display: flex;
-      align-items: center;
-      gap: 7px;
+      background: transparent; border: none; color: rgba(255,255,255,.68);
+      padding: 14px 16px; font-family: 'Barlow', sans-serif;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      border-bottom: 3px solid transparent; white-space: nowrap;
+      transition: all .2s; display: flex; align-items: center; gap: 6px;
     }
     .tab-btn:hover  { color: #fff; background: rgba(255,255,255,.09); }
     .tab-btn.active { color: #fff; border-bottom-color: var(--accent); background: rgba(255,255,255,.12); }
 
-    .tab-panel        { display: none; padding: 20px; max-width: 1700px; margin: 0 auto; }
+    .nav-actions {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+      padding: 8px 0 8px 16px; border-left: 1px solid rgba(255,255,255,.15);
+    }
+    .nav-btn {
+      border: none; cursor: pointer; border-radius: 9px;
+      font-weight: 700; font-size: 12.5px; padding: 8px 14px;
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+    }
+    .nav-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.22); filter: brightness(1.08); }
+    .nav-btn input { display: none; }
+    .nav-btn-white { background: #fff; color: var(--primary); }
+    .nav-btn-blue  { background: var(--primary3); color: #fff; border: 1px solid rgba(255,255,255,.22); }
+    .nav-btn-ghost { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.25); }
+    .status-chip   { color: rgba(255,255,255,.75); font-size: 11.5px; white-space: nowrap; }
+
+    /* ═══ TAB PANELS ════════════════════════════ */
+    .tab-panel        { display: none; padding: 18px; max-width: 1700px; margin: 0 auto; }
     .tab-panel.active { display: block; }
 
-    #captureArea { max-width: 1400px; margin: 0 auto; }
-
-    /* ─── PANEL TOPBAR ────────────────────────────── */
-    .panel-topbar {
+    /* ═══ PANEL HEADER ══════════════════════════ */
+    .panel-header {
       background: linear-gradient(135deg, var(--primary) 0%, #001a45 100%);
-      border-radius: 16px;
-      padding: 16px 22px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow2);
-      position: relative;
-      overflow: hidden;
+      border-radius: 14px; padding: 14px 22px; margin-bottom: 14px;
+      box-shadow: var(--shadow2); position: relative; overflow: hidden; text-align: center;
     }
-    .panel-topbar::after {
-      content: "";
-      position: absolute;
-      right: -60px; top: -60px;
-      width: 200px; height: 200px;
-      background: rgba(255,255,255,.06);
-      border-radius: 50%;
-      pointer-events: none;
+    .panel-header::after {
+      content: ""; position: absolute; right: -60px; top: -60px;
+      width: 200px; height: 200px; background: rgba(255,255,255,.06);
+      border-radius: 50%; pointer-events: none;
     }
-
     .panel-title {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(20px, 2.5vw, 34px);
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      position: relative;
-      z-index: 1;
+      font-size: clamp(22px, 2.8vw, 36px); font-weight: 900; color: #fff;
+      letter-spacing: .1em; text-transform: uppercase; position: relative; z-index: 1;
+    }
+    .panel-header-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 1; text-align: left;
     }
 
-    .panel-actions {
-      display: flex;
-      gap: 9px;
-      align-items: center;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
+    /* ═══ FILTER BAR ════════════════════════════ */
+    .filter-bar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: var(--card); border-radius: 12px; padding: 10px 16px;
+      margin-bottom: 14px; box-shadow: var(--shadow); border: var(--card-border);
     }
-
-    .btn {
-      border: none;
-      cursor: pointer;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 13px;
-      padding: 10px 15px;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      white-space: nowrap;
-      transition: transform .2s, box-shadow .2s, filter .2s;
+    .filter-label {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 800;
+      color: var(--primary); text-transform: uppercase; letter-spacing: .07em; white-space: nowrap;
     }
-    .btn input { display: none; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,.22); filter: brightness(1.05); }
+    .filter-select {
+      border: 1.5px solid rgba(0,41,97,.2); border-radius: 8px;
+      padding: 6px 30px 6px 10px; font-family: 'Barlow', sans-serif;
+      font-size: 13px; font-weight: 600; color: var(--text); background: var(--bg);
+      cursor: pointer; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%23002961'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+      transition: border-color .2s;
+    }
+    .filter-select:focus { border-color: var(--primary3); }
+    .filter-chip-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .filter-chip {
+      padding: 5px 14px; border-radius: 999px; border: 1.5px solid rgba(0,41,97,.2);
+      background: var(--bg); font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 700;
+      color: var(--primary); cursor: pointer; transition: all .18s; white-space: nowrap;
+    }
+    .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 10px rgba(0,41,97,.3); }
+    .filter-chip:hover:not(.active) { border-color: var(--primary3); color: var(--primary3); }
+    .filter-divider { width: 1px; height: 22px; background: rgba(0,41,97,.12); margin: 0 4px; }
+    .filter-cont-tag {
+      display: none; align-items: center; gap: 6px;
+      background: #eff6ff; border: 1.5px solid var(--primary3);
+      border-radius: 8px; padding: 4px 10px;
+      font-size: 12px; font-weight: 700; color: var(--primary3);
+    }
+    .filter-cont-tag.visible { display: flex; }
+    .filter-cont-tag-x { cursor: pointer; font-size: 14px; }
+    .filter-reset {
+      margin-left: auto; padding: 5px 12px;
+      border: 1.5px solid var(--red); border-radius: 8px;
+      background: transparent; color: var(--red);
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: all .18s;
+    }
+    .filter-reset:hover { background: var(--red); color: #fff; }
 
-    .btn-white  { background: #fff; color: var(--primary); }
-    .btn-blue   { background: var(--primary3); color: #fff; border: 1px solid rgba(255,255,255,.22); }
-    .btn-ghost  { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.25); }
-
-    .status-text { color: rgba(255,255,255,.75); font-size: 12px; min-width: 120px; }
-
-    /* ─── KPI GRID (image layout) ─────────────────── */
+    /* ═══ KPI GRID ══════════════════════════════ */
     .kpi-grid {
-      display: grid;
-      grid-template-columns: 230px 1fr 240px;
-      gap: 14px;
-      margin-bottom: 14px;
+      display: grid; grid-template-columns: 210px 320px 210px;
+      gap: 12px; margin-bottom: 14px; justify-content: center;
     }
-
-    /* LEFT column */
-    .kpi-left { display: flex; flex-direction: column; gap: 12px; }
-
+    .kpi-left, .kpi-right { display: flex; flex-direction: column; gap: 10px; }
     .kpi-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 16px;
-      box-shadow: var(--shadow);
-      border: 1.5px solid rgba(0,41,97,.07);
-      flex: 1;
+      background: var(--card); border-radius: var(--radius); padding: 15px;
+      box-shadow: var(--shadow); border: var(--card-border); flex: 1;
     }
-
     .kpi-label {
-      display: inline-block;
-      background: var(--primary);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      padding: 4px 10px;
-      border-radius: 6px;
-      margin-bottom: 10px;
+      display: inline-block; background: var(--primary); color: #fff;
+      font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; padding: 3px 9px; border-radius: 6px; margin-bottom: 9px;
     }
-    .kpi-label.accent { background: var(--primary2); }
-
+    .kpi-label.accent  { background: var(--primary2); }
+    .kpi-label.green   { background: var(--green); }
+    .kpi-label.red     { background: var(--red); }
+    .kpi-label.orange  { background: var(--orange); }
     .kpi-value {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(34px, 3.5vw, 54px);
-      font-weight: 900;
-      color: var(--text);
-      line-height: 1;
-      letter-spacing: -.02em;
+      font-size: clamp(32px, 3.5vw, 52px); font-weight: 900;
+      color: var(--text); line-height: 1; letter-spacing: -.02em;
     }
-
-    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
+    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .kpi-card-sm {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 13px 14px;
-      box-shadow: var(--shadow);
-      border: 1.5px solid rgba(0,41,97,.07);
+      background: var(--card); border-radius: var(--radius); padding: 12px 13px;
+      box-shadow: var(--shadow); border: var(--card-border);
     }
-
     .kpi-value-sm {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(26px, 2.5vw, 40px);
-      font-weight: 900;
-      color: var(--text);
-      line-height: 1;
+      font-size: clamp(24px, 2.5vw, 38px); font-weight: 900; color: var(--text); line-height: 1;
     }
 
     /* CENTER gauge */
     .gauge-wrap {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1.5px solid rgba(0,41,97,.07);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 14px 10px 10px;
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); border: var(--card-border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 12px 8px 8px;
     }
-
     .gauge-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      background: var(--primary);
-      padding: 6px 18px;
-      border-radius: 8px;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      margin-bottom: 10px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 800;
+      color: #fff; background: var(--primary); padding: 5px 14px; border-radius: 8px;
+      text-align: center; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 8px;
     }
+    #gaugeCanvas { width: 100%; max-width: 290px; }
 
-    #gaugeCanvas { width: 100%; max-width: 330px; }
-
-    /* RIGHT column */
-    .kpi-right { display: flex; flex-direction: column; gap: 12px; }
-
-    /* ─── PRIORITY ROW ────────────────────────────── */
+    /* ═══ PRIORITY ══════════════════════════════ */
     .priority-section {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      margin-bottom: 14px;
-      box-shadow: var(--shadow);
-      border: 1.5px solid rgba(0,41,97,.07);
+      background: var(--card); border-radius: var(--radius); padding: 13px 16px;
+      margin-bottom: 14px; box-shadow: var(--shadow); border: var(--card-border);
     }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
     .section-label {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-      background: var(--primary);
-      padding: 5px 16px;
-      border-radius: 7px;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      white-space: nowrap;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800;
+      color: #fff; background: var(--primary); padding: 5px 16px;
+      border-radius: 7px; text-transform: uppercase; letter-spacing: .09em; white-space: nowrap;
     }
-
     .priority-arrow {
-      flex: 1;
-      height: 2px;
+      flex: 1; height: 2px;
       background: linear-gradient(90deg, var(--primary) 0%, transparent 100%);
-      border-radius: 2px;
-      position: relative;
+      border-radius: 2px; position: relative;
     }
     .priority-arrow::after {
-      content: "▶";
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--primary);
-      font-size: 12px;
+      content: "▶"; position: absolute; right: 0; top: 50%;
+      transform: translateY(-50%); color: var(--primary); font-size: 12px;
     }
-
-    .priority-grid {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 6px;
-    }
-
+    .priority-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 6px; }
     .priority-item { text-align: center; }
-
     .priority-code {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--primary);
-      border-bottom: 2.5px solid var(--primary);
-      padding-bottom: 4px;
-      margin-bottom: 5px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 800;
+      color: var(--primary); border-bottom: 2.5px solid var(--primary);
+      padding-bottom: 3px; margin-bottom: 4px;
     }
-
     .priority-letter {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 22px;
-      font-weight: 900;
-      color: var(--text);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 900; color: var(--text);
     }
 
-    /* ─── CHARTS / TABLE ──────────────────────────── */
+    /* ═══ CHARTS / TABLE ════════════════════════ */
     .chart-panel, .table-panel {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      box-shadow: var(--shadow);
-      border: 1.5px solid rgba(0,41,97,.07);
-      margin-bottom: 14px;
+      background: var(--card); border-radius: var(--radius); padding: 15px 17px;
+      box-shadow: var(--shadow); border: var(--card-border); margin-bottom: 14px;
     }
-
     .chart-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      background: var(--primary);
-      padding: 5px 16px;
-      border-radius: 8px;
-      display: inline-block;
-      margin-bottom: 14px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800;
+      color: #fff; background: var(--primary); padding: 5px 15px;
+      border-radius: 8px; display: inline-block; margin-bottom: 13px;
+      text-transform: uppercase; letter-spacing: .08em;
     }
+    .chart-hint { font-size: 12px; color: var(--muted); font-weight: 600; }
 
-    .table-wrap {
-      overflow: auto;
-      max-height: 340px;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      min-width: 560px;
-    }
-
+    .table-wrap { overflow: auto; max-height: 340px; border-radius: 10px; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
     th {
-      background: var(--primary);
-      color: #fff;
-      padding: 11px 12px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      position: sticky;
-      top: 0;
-      z-index: 2;
+      background: var(--primary); color: #fff; padding: 10px 12px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; position: sticky; top: 0; z-index: 2;
     }
-
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #eef2f7;
-      color: var(--text);
-    }
-
+    td { padding: 9px 12px; border-bottom: 1px solid #eef2f7; color: var(--text); }
     tbody tr:hover { background: #eef5ff; }
-
     .badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-weight: 800;
-      font-size: 11px;
+      display: inline-flex; align-items: center; border-radius: 999px;
+      padding: 3px 9px; font-weight: 800; font-size: 11px;
     }
     .badge-correto  { color: #065f46; background: #d1fae5; }
     .badge-faltante { color: #991b1b; background: #fee2e2; }
     .badge-pendente { color: #92400e; background: #fef3c7; }
-
     .footer-info {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 12px;
-      flex-wrap: wrap;
-      gap: 6px;
+      display: flex; justify-content: space-between; margin-top: 9px;
+      color: var(--muted); font-size: 12px; flex-wrap: wrap; gap: 6px;
+    }
+    .empty-state { text-align: center; padding: 30px; color: var(--muted); font-weight: 600; }
+
+    /* ═══ RANKING ═══════════════════════════════ */
+    .ranking-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .ranking-item { display: flex; align-items: center; gap: 10px; }
+    .ranking-medal { font-size: 16px; min-width: 22px; text-align: center; }
+    .ranking-name {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--text); min-width: 140px; text-align: right;
+    }
+    .ranking-track {
+      flex: 1; height: 28px; background: #eef3fb; border-radius: 8px; overflow: hidden;
+    }
+    .ranking-fill {
+      height: 100%; border-radius: 8px;
+      background: linear-gradient(90deg, var(--primary3) 0%, var(--primary) 100%);
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 10px; transition: width .7s ease;
+    }
+    .ranking-val {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 900; color: #fff;
     }
 
-    /* ─── EMPTY STATE ─────────────────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 32px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    /* ─── UPLOAD PLACEHOLDER TABS ─────────────────── */
+    /* ═══ UPLOAD DROPZONE ═══════════════════════ */
     .placeholder-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 72vh;
-      padding-top: 40px;
-      gap: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 72vh; padding-top: 40px; gap: 20px;
     }
-
     .upload-dropzone {
-      background: var(--card);
-      border: 3px dashed rgba(0,41,97,.22);
-      border-radius: 24px;
-      padding: 55px 80px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .28s;
-      max-width: 580px;
-      width: 100%;
+      background: var(--card); border: 3px dashed rgba(0,41,97,.22);
+      border-radius: 24px; padding: 55px 80px; text-align: center;
+      cursor: pointer; transition: all .28s; max-width: 580px; width: 100%;
     }
     .upload-dropzone:hover, .upload-dropzone.drag-over {
-      border-color: var(--primary);
-      background: #eef4ff;
-      transform: translateY(-5px);
-      box-shadow: var(--shadow2);
+      border-color: var(--primary); background: #eef4ff;
+      transform: translateY(-5px); box-shadow: var(--shadow2);
     }
     .upload-dropzone input { display: none; }
-
-    .upload-icon  { font-size: 62px; display: block; margin-bottom: 14px; }
+    .upload-icon  { font-size: 60px; display: block; margin-bottom: 13px; }
     .upload-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--primary);
-      margin-bottom: 8px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 25px; font-weight: 800;
+      color: var(--primary); margin-bottom: 7px;
     }
     .upload-sub { color: var(--muted); font-size: 14px; }
-
     .generic-content { width: 100%; max-width: 1400px; }
+    #captureArea { max-width: 1400px; margin: 0 auto; }
 
-    /* ─── RESPONSIVE ──────────────────────────────── */
+    /* ═══ RESPONSIVE ════════════════════════════ */
     @media (max-width: 1050px) {
       .kpi-grid { grid-template-columns: 1fr 1fr; }
       .gauge-wrap { grid-column: 1 / -1; }
     }
     @media (max-width: 760px) {
-      .tab-panel        { padding: 12px; }
-      .kpi-grid         { grid-template-columns: 1fr; }
-      .kpi-row          { grid-template-columns: 1fr 1fr; }
-      .priority-grid    { grid-template-columns: repeat(5, 1fr); }
-      .upload-dropzone  { padding: 36px 28px; }
-      .panel-topbar     { flex-direction: column; align-items: flex-start; }
+      .tab-panel { padding: 12px; }
+      .kpi-grid  { grid-template-columns: 1fr; }
+      .kpi-row   { grid-template-columns: 1fr 1fr; }
+      .priority-grid { grid-template-columns: repeat(5,1fr); }
+      .upload-dropzone { padding: 36px 28px; }
+      .nav-actions { display: none; }
     }
     @media (max-width: 480px) {
-      .priority-grid { grid-template-columns: repeat(3, 1fr); }
-      .kpi-row       { grid-template-columns: 1fr; }
+      .priority-grid { grid-template-columns: repeat(3,1fr); }
+      .kpi-row { grid-template-columns: 1fr; }
     }
-
     @media print {
-      .tab-nav, .panel-actions { display: none; }
+      .top-nav, .filter-bar { display: none; }
       body { background: #fff; }
     }
   </style>
 </head>
 <body>
 
-<!-- ═══ TAB NAVIGATION ═══════════════════════════════════════════ -->
-<nav class="tab-nav" id="tabNav">
-  <div class="tab-nav-brand">📊 AUDITORIA</div>
-  <button class="tab-btn active"  onclick="switchTab('tab1', this)">🛒 Carrinhos SPA1</button>
-  <button class="tab-btn"         onclick="switchTab('tab2', this)">📋 Pós Sorting</button>
-  <button class="tab-btn"         onclick="switchTab('tab3', this)">👥 Painel 3</button>
-  <button class="tab-btn"         onclick="switchTab('tab4', this)">📊 Painel 4</button>
+<!-- ═══ TOP NAV ══════════════════════════════════════════════════════ -->
+<nav class="top-nav">
+  <div class="nav-brand">📊 AUDITORIA</div>
+  <button class="tab-btn active" onclick="switchTab('tab1',this)">🛒 Carrinhos SPA1</button>
+  <button class="tab-btn"        onclick="switchTab('tab2',this)">📋 Pós Sorting</button>
+  <button class="tab-btn"        onclick="switchTab('tab3',this)">👥 Painel 3</button>
+  <button class="tab-btn"        onclick="switchTab('tab4',this)">📊 Painel 4</button>
+
+  <div class="nav-actions" id="tab1Actions">
+    <label class="nav-btn nav-btn-white">
+      📤 Upload CSV
+      <input type="file" id="csvFile" accept=".csv,text/csv" />
+    </label>
+    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ Print HD</button>
+    <button class="nav-btn nav-btn-ghost" id="reloadBtn">🔄 Nuvem</button>
+    <span class="status-chip" id="statusText">Aguardando dados…</span>
+  </div>
 </nav>
 
-<!-- ═══ TAB 1 — CARRINHOS SPA1 ══════════════════════════════════ -->
+<!-- ═══ TAB 1 — CARRINHOS SPA1 ══════════════════════════════════════ -->
 <div class="tab-panel active" id="tab1">
 
-  <div class="panel-topbar">
-    <div class="panel-title">🛒 Auditoria de Carrinhos SPA1</div>
-    <div class="panel-actions">
-      <label class="btn btn-white">
-        📤 Upload CSV
-        <input type="file" id="csvFile" accept=".csv,text/csv" />
-      </label>
-      <button class="btn btn-blue"  id="printBtn">🖼️ Print HD</button>
-      <button class="btn btn-ghost" id="reloadBtn">🔄 Nuvem</button>
-      <span class="status-text" id="statusText">Aguardando dados…</span>
+  <div class="panel-header">
+    <div class="panel-title">🛒 Auditoria de Carrinhos — SPA1</div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <span class="filter-label">STATUS</span>
+    <select class="filter-select" id="filterEstado" onchange="applyFilters()">
+      <option value="all">Todos os status</option>
+      <option value="correto">✅ Correto</option>
+      <option value="faltante">❌ Faltante</option>
+      <option value="pendente">⏳ Pendente</option>
+    </select>
+
+    <div class="filter-divider"></div>
+
+    <span class="filter-label">TURNO</span>
+    <div class="filter-chip-group" id="turnoChips">
+      <button class="filter-chip active" data-turno="all"   onclick="setTurno(this)">Todos</button>
+      <button class="filter-chip"        data-turno="AM"    onclick="setTurno(this)">🌅 AM</button>
+      <button class="filter-chip"        data-turno="PM"    onclick="setTurno(this)">🌆 PM</button>
+      <button class="filter-chip"        data-turno="SACAS" onclick="setTurno(this)">📦 SACAS</button>
     </div>
+
+    <div class="filter-divider"></div>
+
+    <div class="filter-cont-tag" id="contTag">
+      📦 <span id="contTagVal"></span>
+      <span class="filter-cont-tag-x" onclick="clearCont()">✖</span>
+    </div>
+
+    <button class="filter-reset" onclick="resetFilters()">✖ Limpar Filtros</button>
   </div>
 
   <div id="captureArea">
 
     <!-- KPI GRID -->
     <div class="kpi-grid">
-
       <!-- LEFT -->
       <div class="kpi-left">
         <div class="kpi-card">
@@ -520,18 +400,16 @@
             <div class="kpi-value-sm" id="auditados">—</div>
           </div>
           <div class="kpi-card-sm">
-            <div class="kpi-label accent">Pendentes</div>
+            <div class="kpi-label orange">Pendentes</div>
             <div class="kpi-value-sm" id="pendentesCarr">—</div>
           </div>
         </div>
       </div>
-
       <!-- CENTER GAUGE -->
       <div class="gauge-wrap">
         <div class="gauge-title">Aderência de Carrinhos</div>
-        <canvas id="gaugeCanvas" width="380" height="210"></canvas>
+        <canvas id="gaugeCanvas" width="290" height="160"></canvas>
       </div>
-
       <!-- RIGHT -->
       <div class="kpi-right">
         <div class="kpi-row">
@@ -546,17 +424,16 @@
         </div>
         <div class="kpi-row">
           <div class="kpi-card-sm">
-            <div class="kpi-label">Verificados</div>
+            <div class="kpi-label green">Verificados</div>
             <div class="kpi-value-sm" id="verificados">—</div>
           </div>
           <div class="kpi-card-sm">
-            <div class="kpi-label accent">Faltantes</div>
+            <div class="kpi-label red">Faltantes</div>
             <div class="kpi-value-sm" id="faltantes">—</div>
           </div>
         </div>
       </div>
-
-    </div><!-- /kpi-grid -->
+    </div>
 
     <!-- ORDEM DE PRIORIDADE -->
     <div class="priority-section">
@@ -573,8 +450,11 @@
 
     <!-- ADERÊNCIA POR DESTINO -->
     <div class="chart-panel">
-      <div class="chart-title">Aderência por Destino</div>
-      <canvas id="aderenciaChart" height="90"></canvas>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap;">
+        <div class="chart-title" style="margin-bottom:0">Aderência por Destino</div>
+        <span class="chart-hint">▼ decrescente · clique numa barra para filtrar</span>
+      </div>
+      <canvas id="aderenciaChart" height="90" style="cursor:pointer"></canvas>
     </div>
 
     <!-- TABLE -->
@@ -584,11 +464,8 @@
         <table>
           <thead>
             <tr>
-              <th>Shipment ID</th>
-              <th>Data Auditoria</th>
-              <th>Contenedor</th>
-              <th>Estado</th>
-              <th>Rep Auditoria</th>
+              <th>Shipment ID</th><th>Data Auditoria</th>
+              <th>Contenedor</th><th>Estado</th><th>Rep Auditoria</th>
             </tr>
           </thead>
           <tbody id="dataTable">
@@ -602,57 +479,49 @@
       </div>
     </div>
 
+    <!-- RANKING DE AUDITORES -->
+    <div class="chart-panel">
+      <div class="chart-title">🏆 Ranking — Rep Auditoria</div>
+      <div class="ranking-wrap" id="rankingWrap">
+        <div class="empty-state">Carregue o CSV para ver o ranking.</div>
+      </div>
+    </div>
+
   </div><!-- /captureArea -->
 </div>
 
-<!-- ═══ TAB 2 — PÓS SORTING ══════════════════════════════════════ -->
+<!-- ═══ TAB 2 — PÓS SORTING ═════════════════════════════════════════ -->
 <div class="tab-panel" id="tab2">
-  <div class="panel-topbar" style="margin-bottom:20px">
-    <div class="panel-title">📋 Pós Sorting — Faltantes SPA1</div>
-    <div class="panel-actions">
-      <label class="btn btn-white" id="dropzone2" style="cursor:pointer">
-        📤 Upload XLSX / CSV
-        <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
-      </label>
-      <span class="status-text" id="status2">Aguardando arquivo…</span>
+  <div class="panel-header">
+    <div class="panel-header-inner">
+      <div class="panel-title">📋 Pós Sorting — Faltantes SPA1</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label class="nav-btn nav-btn-white" style="cursor:pointer">
+          📤 Upload XLSX / CSV
+          <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
+        </label>
+        <span class="status-chip" id="status2">Aguardando arquivo…</span>
+      </div>
     </div>
   </div>
 
-  <!-- Upload dropzone (shown before data) -->
   <div class="placeholder-wrap" id="ps-placeholder">
     <label class="upload-dropzone" id="psDrop" style="cursor:pointer">
       <span class="upload-icon">📂</span>
       <div class="upload-title">Carregar Faltantes — Pós Sorting</div>
-      <div class="upload-sub">Clique aqui ou arraste seu arquivo <strong>.xlsx</strong> ou <strong>.csv</strong></div>
+      <div class="upload-sub">Clique ou arraste <strong>.xlsx</strong> ou <strong>.csv</strong></div>
       <input type="file" id="csvFile2b" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
   </div>
 
-  <!-- Content (shown after upload) -->
-  <div id="ps-content" style="display:none; max-width:1400px; margin:0 auto;">
-
-    <!-- KPI row -->
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap:12px; margin-bottom:14px;">
-      <div class="kpi-card">
-        <div class="kpi-label">Total Faltantes</div>
-        <div class="kpi-value" id="ps-total">—</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label accent">Rotas Afetadas</div>
-        <div class="kpi-value" id="ps-rotas">—</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label" style="background:var(--orange)">Caminho Estação</div>
-        <div class="kpi-value" id="ps-caminho">—</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label" style="background:var(--green)">Outras Loc.</div>
-        <div class="kpi-value" id="ps-outras">—</div>
-      </div>
+  <div id="ps-content" style="display:none;max-width:1400px;margin:0 auto;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;">
+      <div class="kpi-card"><div class="kpi-label">Total Faltantes</div><div class="kpi-value" id="ps-total">—</div></div>
+      <div class="kpi-card"><div class="kpi-label accent">Rotas Afetadas</div><div class="kpi-value" id="ps-rotas">—</div></div>
+      <div class="kpi-card"><div class="kpi-label orange">Caminho Estação</div><div class="kpi-value" id="ps-caminho">—</div></div>
+      <div class="kpi-card"><div class="kpi-label green">Outras Loc.</div><div class="kpi-value" id="ps-outras">—</div></div>
     </div>
-
-    <!-- Charts row -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
       <div class="chart-panel" style="margin-bottom:0">
         <div class="chart-title">Faltantes por Rota (Top 15)</div>
         <canvas id="psRotaChart" height="140"></canvas>
@@ -662,32 +531,19 @@
         <canvas id="psPontoChart" height="140"></canvas>
       </div>
     </div>
-
-    <!-- Table -->
     <div class="table-panel">
       <div class="chart-title">Base de Faltantes</div>
       <div class="table-wrap">
-        <table>
-          <thead>
-            <tr id="psHeaders"></tr>
-          </thead>
-          <tbody id="psTable"></tbody>
-        </table>
+        <table><thead><tr id="psHeaders"></tr></thead><tbody id="psTable"></tbody></table>
       </div>
       <div class="footer-info"><span id="psFooter"></span></div>
     </div>
-
   </div>
 </div>
 
-<!-- ═══ TAB 3 ════════════════════════════════════════════════════ -->
+<!-- ═══ TAB 3 ════════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="tab3">
-  <div class="panel-topbar" style="margin-bottom:24px">
-    <div class="panel-title">👥 Painel 3</div>
-    <div class="panel-actions">
-      <span class="status-text" id="status3">Aguardando arquivo…</span>
-    </div>
-  </div>
+  <div class="panel-header"><div class="panel-title">👥 Painel 3</div></div>
   <div class="placeholder-wrap">
     <label class="upload-dropzone" id="dropzone3">
       <span class="upload-icon">📂</span>
@@ -695,29 +551,20 @@
       <div class="upload-sub">Clique aqui ou arraste seu arquivo .csv</div>
       <input type="file" id="csvFile3" accept=".csv,text/csv" />
     </label>
+    <span id="status3" class="status-chip" style="color:var(--muted)">Aguardando arquivo…</span>
     <div class="generic-content" id="panel3Content" style="display:none">
       <div class="chart-panel">
         <div class="chart-title">Dados — Painel 3</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr id="p3Headers"></tr></thead>
-            <tbody id="p3Table"></tbody>
-          </table>
-        </div>
+        <div class="table-wrap"><table><thead><tr id="p3Headers"></tr></thead><tbody id="p3Table"></tbody></table></div>
         <div class="footer-info"><span id="p3Footer"></span></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ TAB 4 ════════════════════════════════════════════════════ -->
+<!-- ═══ TAB 4 ════════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="tab4">
-  <div class="panel-topbar" style="margin-bottom:24px">
-    <div class="panel-title">📊 Painel 4</div>
-    <div class="panel-actions">
-      <span class="status-text" id="status4">Aguardando arquivo…</span>
-    </div>
-  </div>
+  <div class="panel-header"><div class="panel-title">📊 Painel 4</div></div>
   <div class="placeholder-wrap">
     <label class="upload-dropzone" id="dropzone4">
       <span class="upload-icon">📂</span>
@@ -725,37 +572,40 @@
       <div class="upload-sub">Clique aqui ou arraste seu arquivo .csv</div>
       <input type="file" id="csvFile4" accept=".csv,text/csv" />
     </label>
+    <span id="status4" class="status-chip" style="color:var(--muted)">Aguardando arquivo…</span>
     <div class="generic-content" id="panel4Content" style="display:none">
       <div class="chart-panel">
         <div class="chart-title">Dados — Painel 4</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr id="p4Headers"></tr></thead>
-            <tbody id="p4Table"></tbody>
-          </table>
-        </div>
+        <div class="table-wrap"><table><thead><tr id="p4Headers"></tr></thead><tbody id="p4Table"></tbody></table></div>
         <div class="footer-info"><span id="p4Footer"></span></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ SCRIPTS ══════════════════════════════════════════════════ -->
+<!-- ═══ SCRIPTS ══════════════════════════════════════════════════════ -->
 <script>
 const FIREBASE_URL = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
-let currentRows = [];
-let activeChart = null;
-let psRotaChart = null, psPontoChart = null;
+const LS_TAB1 = "audit_spa1_v2";
 
-// Register datalabels plugin globally
+let currentRows  = [];
+let activeChart  = null;
+let psRotaChart  = null;
+let psPontoChart = null;
+
+// Active filters
+let fEstado = "all";
+let fTurno  = "all";
+let fCont   = null;
+
 Chart.register(ChartDataLabels);
-// Default OFF — enable per-chart explicitly
 Chart.defaults.set("plugins.datalabels", { display: false });
 
-const $  = id => document.getElementById(id);
-const nf = new Intl.NumberFormat("pt-BR");
+const $ = id => document.getElementById(id);
+const nf  = new Intl.NumberFormat("pt-BR");
 const fmt = v => nf.format(Number(v) || 0);
 const normalize = s => String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+const escH = v => String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":'&#039;'}[c]));
 
 /* ── TAB SWITCHING ─────────────────────────────────── */
 function switchTab(id, btn) {
@@ -763,176 +613,176 @@ function switchTab(id, btn) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   $(id).classList.add("active");
   btn.classList.add("active");
+  $("tab1Actions").style.display = (id === "tab1") ? "flex" : "none";
+}
+
+/* ── TURNO CLASSIFICATION ──────────────────────────── */
+function classifyTurno(cont) {
+  const s = String(cont || "");
+  if (/AM/i.test(s)) return "AM";
+  if (/PM/i.test(s)) return "PM";
+  if (/[a-zA-Z]/.test(s)) return "other";
+  return "SACAS";
+}
+
+/* ── FILTER FUNCTIONS ──────────────────────────────── */
+function getFiltered() {
+  return currentRows.filter(r => {
+    if (fEstado !== "all" && normalize(r.estado) !== fEstado) return false;
+    if (fTurno  !== "all" && classifyTurno(r.contenedor)  !== fTurno) return false;
+    if (fCont   && r.contenedor !== fCont) return false;
+    return true;
+  });
+}
+
+function applyFilters() {
+  fEstado = $("filterEstado").value;
+  renderDashboard(getFiltered());
+}
+
+function setTurno(btn) {
+  fTurno = btn.dataset.turno;
+  document.querySelectorAll("#turnoChips .filter-chip").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  applyFilters();
+}
+
+function setContFilter(cont) {
+  if (fCont === cont) { clearCont(); return; }
+  fCont = cont;
+  $("contTagVal").textContent = cont;
+  $("contTag").classList.add("visible");
+  renderDashboard(getFiltered());
+}
+
+function clearCont() {
+  fCont = null;
+  $("contTag").classList.remove("visible");
+  renderDashboard(getFiltered());
+}
+
+function resetFilters() {
+  fEstado = "all"; fTurno = "all"; fCont = null;
+  $("filterEstado").value = "all";
+  document.querySelectorAll("#turnoChips .filter-chip").forEach(c => c.classList.remove("active"));
+  document.querySelector("[data-turno='all']").classList.add("active");
+  $("contTag").classList.remove("visible");
+  renderDashboard(currentRows);
 }
 
 /* ── GAUGE ─────────────────────────────────────────── */
 function drawGauge(pct) {
   const canvas = $("gaugeCanvas");
-  const ctx    = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H * 0.83;
+  const r  = Math.min(W * 0.40, H * 0.72);
+  const lw = Math.max(13, r * 0.11);
 
-  const cx = W / 2, cy = H * 0.82;
-  const r  = Math.min(W * 0.4, H * 0.70);
-  const lw = Math.max(16, r * 0.12);
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
+  ctx.strokeStyle="#e2e8f0"; ctx.lineWidth=lw; ctx.lineCap="butt"; ctx.stroke();
 
-  // Track
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
-  ctx.strokeStyle = "#e2e8f0";
-  ctx.lineWidth   = lw;
-  ctx.lineCap     = "butt";
-  ctx.stroke();
-
-  // Ticks
   for (let i = 0; i <= 10; i++) {
-    const a = Math.PI + (i / 10) * Math.PI;
-    const tickLen = i % 5 === 0 ? lw * 1.0 : lw * 0.5;
+    const a = Math.PI + (i/10)*Math.PI;
+    const tl = i%5===0 ? lw*1.0 : lw*0.5;
     ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * (r - lw / 2 - 2), cy + Math.sin(a) * (r - lw / 2 - 2));
-    ctx.lineTo(cx + Math.cos(a) * (r - lw / 2 - 2 - tickLen), cy + Math.sin(a) * (r - lw / 2 - 2 - tickLen));
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth   = i % 5 === 0 ? 2 : 1;
-    ctx.stroke();
+    ctx.moveTo(cx+Math.cos(a)*(r-lw/2-2), cy+Math.sin(a)*(r-lw/2-2));
+    ctx.lineTo(cx+Math.cos(a)*(r-lw/2-2-tl), cy+Math.sin(a)*(r-lw/2-2-tl));
+    ctx.strokeStyle="#94a3b8"; ctx.lineWidth=i%5===0?2:1; ctx.stroke();
   }
 
-  // Progress arc
-  const angle = Math.PI + (Math.min(pct, 100) / 100) * Math.PI;
-  const grad  = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
-  grad.addColorStop(0,   "#1a56db");
-  grad.addColorStop(0.6, "#002961");
-  grad.addColorStop(1,   pct > 85 ? "#16a34a" : "#e5484d");
+  const angle = Math.PI + (Math.min(pct,100)/100)*Math.PI;
+  const grad  = ctx.createLinearGradient(cx-r, cy, cx+r, cy);
+  grad.addColorStop(0, "#1a56db"); grad.addColorStop(0.6, "#002961");
+  grad.addColorStop(1, pct > 85 ? "#16a34a" : "#e5484d");
+  ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,angle);
+  ctx.strokeStyle=grad; ctx.lineWidth=lw; ctx.lineCap="round"; ctx.stroke();
 
   ctx.beginPath();
-  ctx.arc(cx, cy, r, Math.PI, angle);
-  ctx.strokeStyle = grad;
-  ctx.lineWidth   = lw;
-  ctx.lineCap     = "round";
-  ctx.stroke();
+  ctx.arc(cx+Math.cos(angle)*r, cy+Math.sin(angle)*r, lw*0.35, 0, 2*Math.PI);
+  ctx.fillStyle="#fff"; ctx.fill();
+  ctx.strokeStyle="#002961"; ctx.lineWidth=2; ctx.stroke();
 
-  // Needle dot
-  ctx.beginPath();
-  ctx.arc(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, lw * 0.38, 0, 2 * Math.PI);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-  ctx.strokeStyle = "#002961";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Center text
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-
-  ctx.fillStyle = "#002961";
-  ctx.font      = `900 ${Math.round(r * 0.30)}px 'Barlow Condensed', sans-serif`;
-  ctx.fillText(pct.toFixed(2).replace(".", ",") + "%", cx, cy - r * 0.26);
-
-  ctx.fillStyle = "#64748b";
-  ctx.font      = `600 ${Math.round(r * 0.14)}px 'Barlow', sans-serif`;
-  ctx.fillText("PROGRESSO", cx, cy - r * 0.06);
-
-  // Min / Max labels
-  ctx.font      = `700 ${Math.round(r * 0.13)}px 'Barlow', sans-serif`;
-  ctx.fillStyle = "#94a3b8";
-  ctx.textAlign = "left";
-  ctx.fillText("0%",   cx - r - 3, cy + 12);
-  ctx.textAlign = "right";
-  ctx.fillText("100%", cx + r + 3, cy + 12);
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillStyle="#002961";
+  ctx.font=`900 ${Math.round(r*0.30)}px 'Barlow Condensed',sans-serif`;
+  ctx.fillText(pct.toFixed(2).replace(".",",")+"%", cx, cy-r*0.26);
+  ctx.fillStyle="#64748b";
+  ctx.font=`600 ${Math.round(r*0.13)}px 'Barlow',sans-serif`;
+  ctx.fillText("PROGRESSO", cx, cy-r*0.07);
+  ctx.font=`700 ${Math.round(r*0.12)}px 'Barlow',sans-serif`;
+  ctx.fillStyle="#94a3b8";
+  ctx.textAlign="left";  ctx.fillText("0%",   cx-r-3, cy+11);
+  ctx.textAlign="right"; ctx.fillText("100%", cx+r+3, cy+11);
 }
 
-/* ── CSV PARSE (Carrinhos) ─────────────────────────── */
+/* ── CSV PARSERS ────────────────────────────────────── */
 function parseCSV(text) {
   text = text.replace(/^\uFEFF/, "");
-  const rows = [];
-  let row = [], field = "", inQ = false;
-
+  const rows = []; let row = [], field = "", inQ = false;
   for (let i = 0; i < text.length; i++) {
-    const c = text[i], n = text[i + 1];
-    if (c === '"' && inQ && n === '"') { field += '"'; i++; }
-    else if (c === '"') { inQ = !inQ; }
-    else if (c === ',' && !inQ) { row.push(field); field = ""; }
-    else if ((c === '\n' || c === '\r') && !inQ) {
-      if (c === '\r' && n === '\n') i++;
+    const c = text[i], n = text[i+1];
+    if (c==='"'&&inQ&&n==='"') { field+='"'; i++; }
+    else if (c==='"') { inQ=!inQ; }
+    else if (c===','&&!inQ) { row.push(field); field=""; }
+    else if ((c==='\n'||c==='\r')&&!inQ) {
+      if (c==='\r'&&n==='\n') i++;
       row.push(field);
-      if (row.some(x => String(x).trim())) rows.push(row);
-      row = []; field = "";
-    } else { field += c; }
+      if (row.some(x=>String(x).trim())) rows.push(row);
+      row=[]; field="";
+    } else { field+=c; }
   }
-  if (field || row.length) { row.push(field); if (row.some(x => String(x).trim())) rows.push(row); }
+  if (field||row.length) { row.push(field); if(row.some(x=>String(x).trim())) rows.push(row); }
   if (!rows.length) return [];
-
-  const hdrs = rows[0].map(h => h.trim());
+  const hdrs = rows[0].map(h=>h.trim());
   return rows.slice(1).map(cols => {
     const o = {};
-    hdrs.forEach((h, i) => o[h] = (cols[i] || "").trim());
+    hdrs.forEach((h,i) => o[h]=(cols[i]||"").trim());
     return {
-      shipmentId:   o["Shipment ID"]   || o["shipmentId"]   || "",
-      dataAuditoria:o["Data auditoria"]|| o["dataAuditoria"] || "",
-      contenedor:   o["Contenedor"]    || o["contenedor"]    || "",
-      estado:       o["Estado"]        || o["estado"]        || "",
-      repAuditoria: o["Rep auditoria"] || o["repAuditoria"]  || ""
+      shipmentId:    o["Shipment ID"]   ||o["shipmentId"]   ||"",
+      dataAuditoria: o["Data auditoria"]||o["dataAuditoria"] ||"",
+      contenedor:    o["Contenedor"]    ||o["contenedor"]    ||"",
+      estado:        o["Estado"]        ||o["estado"]        ||"",
+      repAuditoria:  o["Rep auditoria"] ||o["repAuditoria"]  ||""
     };
-  }).filter(r => r.shipmentId || r.contenedor || r.estado);
+  }).filter(r => r.shipmentId||r.contenedor||r.estado);
 }
 
-/* ── CSV PARSE (Generic) ───────────────────────────── */
 function parseCSVGeneric(text) {
   text = text.replace(/^\uFEFF/, "");
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (!lines.length) return { headers: [], rows: [] };
-  const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
-  const rows = lines.slice(1).map(line => {
-    const cols = line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
-    const obj  = {};
-    headers.forEach((h, i) => obj[h] = cols[i] || "");
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  if (!lines.length) return { headers:[], rows:[] };
+  const headers = lines[0].split(",").map(h=>h.trim().replace(/^"|"$/g,""));
+  const rows = lines.slice(1).map(line=>{
+    const cols = line.split(",").map(c=>c.trim().replace(/^"|"$/g,""));
+    const obj = {};
+    headers.forEach((h,i)=>obj[h]=cols[i]||"");
     return obj;
-  }).filter(r => Object.values(r).some(v => v));
+  }).filter(r=>Object.values(r).some(v=>v));
   return { headers, rows };
 }
 
-function countBy(rows, key) {
-  return rows.reduce((acc, r) => {
-    const v = r[key] || "N/A";
-    acc[v] = (acc[v] || 0) + 1;
-    return acc;
-  }, {});
-}
-
-function sortedEntries(obj) {
-  return Object.entries(obj).sort((a, b) => b[1] - a[1]);
-}
-
-function escH(v) {
-  return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":'&#039;'}[c]));
-}
-
-function badgeClass(estado) {
-  const n = normalize(estado);
-  if (n === "correto")  return "correto";
-  if (n === "faltante") return "faltante";
+function badgeClass(e) {
+  const n = normalize(e);
+  if (n==="correto")  return "correto";
+  if (n==="faltante") return "faltante";
   return "pendente";
 }
 
 function setStatus(msg) { $("statusText").textContent = msg; }
 
-/* ── RENDER MAIN PANEL ─────────────────────────────── */
-function render(rows, label = "CSV") {
-  currentRows = rows;
-  const total  = rows.length;
-
-  // Estado counts
-  const estadoCnt = countBy(rows, "estado");
-  const correto   = Object.entries(estadoCnt).filter(([k]) => normalize(k) === "correto" ).reduce((a,[,v]) => a+v, 0);
-  const faltante  = Object.entries(estadoCnt).filter(([k]) => normalize(k) === "faltante").reduce((a,[,v]) => a+v, 0);
-  const pendente  = Object.entries(estadoCnt).filter(([k]) => normalize(k) === "pendente").reduce((a,[,v]) => a+v, 0);
-
-  // Carrinhos
-  const conts      = [...new Set(rows.map(r => r.contenedor).filter(Boolean))];
-  const totalCarr  = conts.length;
-  const auditadoSt = new Set(rows.filter(r => normalize(r.estado) === "correto").map(r => r.contenedor));
-  const auditados  = auditadoSt.size;
-  const pendenteC  = totalCarr - auditados;
-  const aderencia  = totalCarr > 0 ? (auditados / totalCarr) * 100 : 0;
+/* ── RENDER DASHBOARD (with filtered rows) ─────────── */
+function renderDashboard(rows) {
+  const total     = rows.length;
+  const correto   = rows.filter(r=>normalize(r.estado)==="correto").length;
+  const faltante  = rows.filter(r=>normalize(r.estado)==="faltante").length;
+  const pendente  = rows.filter(r=>normalize(r.estado)==="pendente").length;
+  const conts     = [...new Set(rows.map(r=>r.contenedor).filter(Boolean))];
+  const totalCarr = conts.length;
+  const auditados = new Set(rows.filter(r=>normalize(r.estado)==="correto").map(r=>r.contenedor)).size;
+  const pendenteC = totalCarr - auditados;
+  const aderencia = totalCarr > 0 ? (auditados/totalCarr)*100 : 0;
 
   $("totalCarrinhos").textContent = fmt(totalCarr);
   $("auditados").textContent      = fmt(auditados);
@@ -941,110 +791,134 @@ function render(rows, label = "CSV") {
   $("verificados").textContent    = fmt(correto);
   $("faltantes").textContent      = fmt(faltante);
   $("aMais").textContent          = fmt(pendente);
-
   drawGauge(aderencia);
 
-  // Priority: sort contenedores by pending count DESC
+  // Priority (based on pending per container)
   const pendPorCont = {};
   conts.forEach(c => {
-    pendPorCont[c] = rows.filter(r => r.contenedor === c && normalize(r.estado) !== "correto").length;
+    pendPorCont[c] = rows.filter(r=>r.contenedor===c&&normalize(r.estado)!=="correto").length;
   });
-  const priority = [...conts].sort((a, b) => pendPorCont[b] - pendPorCont[a]).slice(0, 10);
-  const LETTERS  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
+  const priority = [...conts].sort((a,b)=>pendPorCont[b]-pendPorCont[a]).slice(0,10);
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   $("priorityGrid").innerHTML = priority.length
-    ? priority.map((c, i) => `
-        <div class="priority-item">
-          <div class="priority-code">${escH(c)}</div>
-          <div class="priority-letter">${LETTERS[i] || "?"}</div>
-        </div>`).join("")
-    : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">
-         Sem contenedores para exibir.
-       </div>`;
+    ? priority.map((c,i)=>`<div class="priority-item"><div class="priority-code">${escH(c)}</div><div class="priority-letter">${LETTERS[i]||"?"}</div></div>`).join("")
+    : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">Sem contenedores para exibir.</div>`;
 
-  // Aderência por destino chart
-  const allDest = conts.slice(0, 15);
-  const adh     = allDest.map(c => {
-    const t = rows.filter(r => r.contenedor === c).length;
-    const ok= rows.filter(r => r.contenedor === c && normalize(r.estado) === "correto").length;
-    return t > 0 ? Math.round((ok / t) * 10000) / 100 : 0;
-  });
+  // Aderência por destino — sorted DESCENDING by adh%
+  const adhData = conts.map(c => {
+    const t  = rows.filter(r=>r.contenedor===c).length;
+    const ok = rows.filter(r=>r.contenedor===c&&normalize(r.estado)==="correto").length;
+    return { cont:c, adh: t>0 ? Math.round((ok/t)*10000)/100 : 0 };
+  }).sort((a,b) => b.adh - a.adh).slice(0,15);
 
-  if (activeChart) { activeChart.destroy(); }
+  const highlight = (d) => d.cont===fCont ? "#d97706" : d.adh>=90 ? "#002961" : d.adh>=50 ? "#1a56db" : "#60a5fa";
+
+  if (activeChart) activeChart.destroy();
   activeChart = new Chart($("aderenciaChart"), {
     type: "bar",
     data: {
-      labels: allDest,
+      labels: adhData.map(d=>d.cont),
       datasets: [{
         label: "Aderência (%)",
-        data: adh,
-        backgroundColor: adh.map(v => v >= 90 ? "#002961" : v >= 50 ? "#1a56db" : "#60a5fa"),
+        data:  adhData.map(d=>d.adh),
+        backgroundColor: adhData.map(d=>highlight(d)),
         borderRadius: 10,
         hoverBackgroundColor: "#06418f"
       }]
     },
     options: {
       responsive: true,
+      onClick: (_, els) => {
+        if (!els.length) return;
+        setContFilter(adhData[els[0].index].cont);
+      },
       scales: {
-        y: {
-          beginAtZero: true, max: 100,
-          ticks: { callback: v => v + "%" },
-          grid: { color: "#f1f5f9" }
-        },
-        x: { grid: { display: false } }
+        y: { beginAtZero:true, max:100, ticks:{callback:v=>v+"%"}, grid:{color:"#f1f5f9"} },
+        x: { grid:{display:false} }
       },
       plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => `Aderência: ${ctx.raw.toFixed(2).replace(".", ",")}%` } },
+        legend: { display:false },
+        tooltip: { callbacks:{ label:ctx=>`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%` } },
         datalabels: {
-          display: true,
-          anchor: "end",
-          align: "top",
-          color: "#002961",
-          font: { weight: "800", size: 11, family: "'Barlow Condensed', sans-serif" },
-          formatter: v => v.toFixed(1).replace(".", ",") + "%"
+          display: true, anchor:"end", align:"top", color:"#002961",
+          font:{ weight:"800", size:10, family:"'Barlow Condensed',sans-serif" },
+          formatter: v => v.toFixed(1).replace(".",",")+"%"
         }
       },
-      animation: { duration: 900, easing: "easeOutQuart" }
+      animation: { duration:700, easing:"easeOutQuart" }
     }
   });
 
-  // Table (max 300 rows)
-  $("dataTable").innerHTML = rows.slice(0, 300).map(r => `
+  // Table
+  $("dataTable").innerHTML = rows.slice(0,300).map(r=>`
     <tr>
       <td>${escH(r.shipmentId)}</td>
       <td>${escH(r.dataAuditoria)}</td>
       <td>${escH(r.contenedor)}</td>
-      <td><span class="badge badge-${badgeClass(r.estado)}">${escH(r.estado || "N/A")}</span></td>
+      <td><span class="badge badge-${badgeClass(r.estado)}">${escH(r.estado||"N/A")}</span></td>
       <td>${escH(r.repAuditoria)}</td>
     </tr>`).join("");
+  $("tableSubtitle").textContent = `${fmt(rows.length)} registros · exibindo ${Math.min(rows.length,300)}`;
 
-  $("tableSubtitle").textContent = `${fmt(rows.length)} registros · exibindo ${Math.min(rows.length, 300)}`;
-  $("lastUpdate").textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")} · ${label}`;
-  setStatus(`${fmt(rows.length)} registros · ${fmt(totalCarr)} carrinhos`);
+  // Ranking de Auditores
+  const repCnt = {};
+  rows.forEach(r => { const v=r.repAuditoria||"—"; repCnt[v]=(repCnt[v]||0)+1; });
+  const sorted  = Object.entries(repCnt).sort((a,b)=>b[1]-a[1]);
+  const maxVal  = sorted[0]?.[1] || 1;
+  const medals  = ["🥇","🥈","🥉"];
+  $("rankingWrap").innerHTML = sorted.length
+    ? sorted.map(([name,cnt],i)=>`
+        <div class="ranking-item">
+          <span class="ranking-medal">${medals[i]||""}</span>
+          <div class="ranking-name">${escH(name)}</div>
+          <div class="ranking-track">
+            <div class="ranking-fill" style="width:${(cnt/maxVal*100).toFixed(1)}%">
+              <span class="ranking-val">${fmt(cnt)}</span>
+            </div>
+          </div>
+        </div>`).join("")
+    : `<div class="empty-state">Nenhum dado de Rep Auditoria.</div>`;
 }
 
-/* ── RENDER GENERIC ────────────────────────────────── */
+/* ── RENDER (called after upload — sets currentRows) ─ */
+function render(rows, label="CSV") {
+  currentRows = rows;
+  $("lastUpdate").textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")} · ${label}`;
+  setStatus(`${fmt(rows.length)} registros · ${fmt([...new Set(rows.map(r=>r.contenedor).filter(Boolean))].length)} carrinhos`);
+  renderDashboard(rows);
+}
+
+/* ── GENERIC TAB RENDER ─────────────────────────────── */
 function renderGeneric(num, data) {
   const { headers, rows } = data;
   if (!headers.length) return;
-  $(`p${num}Headers`).innerHTML = headers.map(h => `<th>${escH(h)}</th>`).join("");
-  $(`p${num}Table`).innerHTML   = rows.slice(0, 200).map(r =>
-    `<tr>${headers.map(h => `<td>${escH(r[h])}</td>`).join("")}</tr>`
-  ).join("");
+  $(`p${num}Headers`).innerHTML = headers.map(h=>`<th>${escH(h)}</th>`).join("");
+  $(`p${num}Table`).innerHTML   = rows.slice(0,200).map(r=>`<tr>${headers.map(h=>`<td>${escH(r[h])}</td>`).join("")}</tr>`).join("");
   $(`p${num}Footer`).textContent = `${fmt(rows.length)} registros · ${headers.length} colunas`;
   $(`panel${num}Content`).style.display = "block";
-  document.querySelector(`#tab${num} .upload-dropzone`).style.maxWidth = "100%";
-  document.querySelector(`#tab${num} .upload-dropzone`).style.padding  = "18px 24px";
+  const dz = document.querySelector(`#tab${num} .upload-dropzone`);
+  if (dz) { dz.style.padding="18px 24px"; dz.style.maxWidth="100%"; }
 }
 
-/* ── FIREBASE ──────────────────────────────────────── */
+/* ── LOCAL STORAGE ──────────────────────────────────── */
+function saveLocal(rows, label) {
+  try { localStorage.setItem(LS_TAB1, JSON.stringify({rows, label, ts:Date.now()})); } catch{}
+}
+function loadLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_TAB1)||"null");
+    if (d?.rows?.length) { render(d.rows, d.label+" (salvo)"); return true; }
+  } catch {}
+  return false;
+}
+
+/* ── FIREBASE ───────────────────────────────────────── */
 async function saveToFirebase(rows, fileName) {
   setStatus("Salvando na nuvem…");
-  const payload = { updatedAt: new Date().toISOString(), fileName, totalRows: rows.length, rows };
-  const res = await fetch(FIREBASE_URL, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const payload = { updatedAt:new Date().toISOString(), fileName, totalRows:rows.length, rows };
+  const res = await fetch(FIREBASE_URL, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
   if (!res.ok) throw new Error("Firebase PUT failed");
-  setStatus(`Salvo: ${fmt(rows.length)} registros.`);
+  setStatus(`✅ Salvo: ${fmt(rows.length)} registros.`);
 }
 
 async function loadFromFirebase() {
@@ -1054,20 +928,20 @@ async function loadFromFirebase() {
     if (!res.ok) throw new Error();
     const data = await res.json();
     if (data?.rows?.length) { render(data.rows, "Firebase"); }
-    else { setStatus("Sem dados na nuvem. Faça upload do CSV."); }
-  } catch { setStatus("Não foi possível carregar da nuvem."); }
+    else { setStatus("Sem dados na nuvem. Faça upload do CSV."); loadLocal(); }
+  } catch { setStatus("Não foi possível carregar da nuvem."); loadLocal(); }
 }
 
-/* ── EVENTS: TAB 1 ─────────────────────────────────── */
+/* ── EVENTS: TAB 1 ──────────────────────────────────── */
 $("csvFile").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   setStatus("Lendo CSV…");
   try {
     const text = await file.text();
     const rows = parseCSV(text);
     if (!rows.length) { setStatus("CSV sem registros válidos."); return; }
     render(rows, file.name);
+    saveLocal(rows, file.name);
     await saveToFirebase(rows, file.name);
   } catch(err) { console.error(err); setStatus("Erro ao processar CSV."); }
 });
@@ -1077,178 +951,163 @@ $("reloadBtn").addEventListener("click", loadFromFirebase);
 $("printBtn").addEventListener("click", async () => {
   try {
     setStatus("Gerando imagem…");
-    const canvas = await html2canvas($("captureArea"), { scale: 2, backgroundColor: "#eef3fb", useCORS: true, logging: false });
-    const link   = document.createElement("a");
-    link.download = `auditoria-spa1-${new Date().toISOString().slice(0, 10)}.png`;
-    link.href     = canvas.toDataURL("image/png", 1.0);
+    const canvas = await html2canvas($("captureArea"), { scale:2, backgroundColor:"#eef3fb", useCORS:true, logging:false });
+    const link = document.createElement("a");
+    link.download = `auditoria-spa1-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
     setStatus("Imagem HD salva!");
   } catch(err) { console.error(err); setStatus("Erro ao gerar imagem."); }
 });
 
-/* ── EVENTS: GENERIC TABS ──────────────────────────── */
-[3, 4].forEach(num => {
-  const fileInput = $(`csvFile${num}`);
-  const dropzone  = $(`dropzone${num}`);
-  const statusEl  = $(`status${num}`);
-
-  fileInput.addEventListener("change", async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    statusEl.textContent = "Lendo CSV…";
-    const text = await file.text();
-    const data = parseCSVGeneric(text);
-    renderGeneric(num, data);
-    statusEl.textContent = `${fmt(data.rows.length)} registros carregados`;
-  });
-
-  // Drag & drop
-  dropzone.addEventListener("dragover",  e => { e.preventDefault(); dropzone.classList.add("drag-over"); });
-  dropzone.addEventListener("dragleave", ()  => dropzone.classList.remove("drag-over"));
-  dropzone.addEventListener("drop", async e => {
-    e.preventDefault();
-    dropzone.classList.remove("drag-over");
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-    statusEl.textContent = "Lendo CSV…";
-    const text = await file.text();
-    const data = parseCSVGeneric(text);
-    renderGeneric(num, data);
-    statusEl.textContent = `${fmt(data.rows.length)} registros carregados`;
-  });
-});
-
-/* ── PÓS SORTING ───────────────────────────────────── */
+/* ── PÓS SORTING ────────────────────────────────────── */
 function renderPosSorting(rows, headers) {
   $("ps-placeholder").style.display = "none";
   $("ps-content").style.display     = "block";
-
   const total   = rows.length;
-  const rotas   = new Set(rows.map(r => r["N.º Rota"]).filter(Boolean)).size;
-  const caminho = rows.filter(r => normalize(r["Localização do pacote"] || "").includes("caminho")).length;
-  const outras  = total - caminho;
-
+  const rotas   = new Set(rows.map(r=>r["N.º Rota"]).filter(Boolean)).size;
+  const caminho = rows.filter(r=>normalize(r["Localização do pacote"]||"").includes("caminho")).length;
   $("ps-total").textContent   = fmt(total);
   $("ps-rotas").textContent   = fmt(rotas);
   $("ps-caminho").textContent = fmt(caminho);
-  $("ps-outras").textContent  = fmt(outras);
+  $("ps-outras").textContent  = fmt(total - caminho);
 
-  // Count by rota
   const rotaCnt = {};
-  rows.forEach(r => { const v = r["N.º Rota"] || "N/A"; rotaCnt[v] = (rotaCnt[v]||0)+1; });
+  rows.forEach(r=>{ const v=r["N.º Rota"]||"N/A"; rotaCnt[v]=(rotaCnt[v]||0)+1; });
   const topRotas = Object.entries(rotaCnt).sort((a,b)=>b[1]-a[1]).slice(0,15);
 
-  // Count by ponto
   const pontoCnt = {};
-  rows.forEach(r => { const v = r["Ponto"] || "N/A"; pontoCnt[v] = (pontoCnt[v]||0)+1; });
+  rows.forEach(r=>{ const v=r["Ponto"]||"N/A"; pontoCnt[v]=(pontoCnt[v]||0)+1; });
   const topPontos = Object.entries(pontoCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-  if (psRotaChart)  { psRotaChart.destroy(); }
-  if (psPontoChart) { psPontoChart.destroy(); }
+  if (psRotaChart)  psRotaChart.destroy();
+  if (psPontoChart) psPontoChart.destroy();
 
-  const dlBase = {
-    display: true,
-    anchor: "end", align: "top",
-    font: { weight: "800", size: 11, family: "'Barlow Condensed', sans-serif" },
-    color: "#002961",
-    formatter: v => v
-  };
+  const dlBase = { display:true, anchor:"end", align:"top",
+    font:{weight:"800",size:11,family:"'Barlow Condensed',sans-serif"}, color:"#002961", formatter:v=>v };
 
   psRotaChart = new Chart($("psRotaChart"), {
     type: "bar",
     data: {
-      labels: topRotas.map(([k]) => k),
-      datasets: [{
-        label: "Faltantes",
-        data: topRotas.map(([,v]) => v),
-        backgroundColor: "#1a56db",
-        borderRadius: 8,
-        hoverBackgroundColor: "#002961"
-      }]
+      labels: topRotas.map(([k])=>k),
+      datasets: [{ label:"Faltantes", data:topRotas.map(([,v])=>v),
+        backgroundColor:"#1a56db", borderRadius:8, hoverBackgroundColor:"#002961" }]
     },
     options: {
       responsive: true,
-      scales: { y: { beginAtZero: true, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } },
-      plugins: { legend: { display: false }, datalabels: dlBase, tooltip: { callbacks: { label: ctx => `Faltantes: ${ctx.raw}` } } },
-      animation: { duration: 700, easing: "easeOutQuart" }
+      scales: { y:{beginAtZero:true,grid:{color:"#f1f5f9"}}, x:{grid:{display:false}} },
+      plugins: { legend:{display:false}, datalabels:dlBase, tooltip:{callbacks:{label:ctx=>`Faltantes: ${ctx.raw}`}} },
+      animation: { duration:700, easing:"easeOutQuart" }
     }
   });
 
-  const pontoColors = ["#002961","#06418f","#1a56db","#60a5fa","#93c5fd","#bfdbfe","#002961","#06418f","#1a56db","#60a5fa"];
+  const pColors = ["#002961","#06418f","#1a56db","#60a5fa","#93c5fd","#bfdbfe","#3b82f6","#06418f","#1a56db","#60a5fa"];
   psPontoChart = new Chart($("psPontoChart"), {
     type: "doughnut",
     data: {
-      labels: topPontos.map(([k]) => k),
-      datasets: [{ data: topPontos.map(([,v])=>v), backgroundColor: pontoColors, borderWidth: 2, borderColor: "#fff" }]
+      labels: topPontos.map(([k])=>k),
+      datasets: [{ data:topPontos.map(([,v])=>v), backgroundColor:pColors, borderWidth:2, borderColor:"#fff" }]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { position: "right", labels: { font: { family: "'Barlow',sans-serif", weight: "700", size:12 }, color:"#0f172a" } },
-        datalabels: {
-          display: true,
-          color: "#fff", font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" },
-          formatter: (v, ctx) => {
-            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
-            return total ? Math.round(v/total*100)+"%" : "";
-          }
-        },
-        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}` } }
+        legend: { position:"right", labels:{font:{family:"'Barlow',sans-serif",weight:"700",size:12},color:"#0f172a"} },
+        datalabels: { display:true, color:"#fff",
+          font:{weight:"800",size:12,family:"'Barlow Condensed',sans-serif"},
+          formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); return t?Math.round(v/t*100)+"%":""; } },
+        tooltip: { callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}`} }
       }
     }
   });
 
-  // Table
-  const displayHeaders = headers.length ? headers : Object.keys(rows[0] || {});
-  $("psHeaders").innerHTML = displayHeaders.map(h => `<th>${escH(h)}</th>`).join("");
-  $("psTable").innerHTML   = rows.slice(0, 300).map(r =>
-    `<tr>${displayHeaders.map(h => `<td>${escH(r[h])}</td>`).join("")}</tr>`
-  ).join("");
-  $("psFooter").textContent = `${fmt(rows.length)} registros · ${displayHeaders.length} colunas · exibindo ${Math.min(rows.length,300)}`;
+  const dh = headers.length ? headers : Object.keys(rows[0]||{});
+  $("psHeaders").innerHTML = dh.map(h=>`<th>${escH(h)}</th>`).join("");
+  $("psTable").innerHTML   = rows.slice(0,300).map(r=>`<tr>${dh.map(h=>`<td>${escH(r[h])}</td>`).join("")}</tr>`).join("");
+  $("psFooter").textContent = `${fmt(rows.length)} registros · ${dh.length} colunas`;
 }
 
-async function handlePsSortingFile(file) {
+async function handlePsFile(file) {
   if (!file) return;
   $("status2").textContent = "Lendo arquivo…";
   try {
     const ext = file.name.split(".").pop().toLowerCase();
-    if (ext === "xlsx" || ext === "xls") {
+    let rows, headers;
+    if (ext==="xlsx"||ext==="xls") {
       const buf  = await file.arrayBuffer();
-      const wb   = XLSX.read(buf, { type: "array" });
+      const wb   = XLSX.read(buf, {type:"array"});
       const ws   = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(ws, { defval: "" });
-      const hdrs = data.length ? Object.keys(data[0]) : [];
-      renderPosSorting(data, hdrs);
-      $("status2").textContent = `${fmt(data.length)} registros carregados · ${file.name}`;
+      rows    = XLSX.utils.sheet_to_json(ws, {defval:""});
+      headers = rows.length ? Object.keys(rows[0]) : [];
     } else {
-      const text = await file.text();
-      const parsed = parseCSVGeneric(text);
-      renderPosSorting(parsed.rows, parsed.headers);
-      $("status2").textContent = `${fmt(parsed.rows.length)} registros carregados · ${file.name}`;
+      const parsed = parseCSVGeneric(await file.text());
+      rows = parsed.rows; headers = parsed.headers;
     }
-  } catch(err) {
-    console.error(err);
-    $("status2").textContent = "Erro ao processar arquivo.";
-  }
+    renderPosSorting(rows, headers);
+    // Auto-save
+    try { localStorage.setItem("ps_data", JSON.stringify({rows,headers,fn:file.name,ts:Date.now()})); } catch {}
+    $("status2").textContent = `✅ ${fmt(rows.length)} registros · ${file.name}`;
+  } catch(err) { console.error(err); $("status2").textContent = "Erro ao processar arquivo."; }
 }
 
-// Pós Sorting: topbar upload button
-$("csvFile2").addEventListener("change", e => handlePsSortingFile(e.target.files[0]));
-
-// Pós Sorting: center dropzone
-$("csvFile2b").addEventListener("change", e => handlePsSortingFile(e.target.files[0]));
-$("psDrop").addEventListener("click", () => $("csvFile2b").click());
+$("csvFile2").addEventListener("change",  e => handlePsFile(e.target.files[0]));
+$("csvFile2b").addEventListener("change", e => handlePsFile(e.target.files[0]));
+$("psDrop").addEventListener("click",     () => $("csvFile2b").click());
 $("psDrop").addEventListener("dragover",  e => { e.preventDefault(); $("psDrop").classList.add("drag-over"); });
-$("psDrop").addEventListener("dragleave", ()  => $("psDrop").classList.remove("drag-over"));
+$("psDrop").addEventListener("dragleave", () => $("psDrop").classList.remove("drag-over"));
 $("psDrop").addEventListener("drop", async e => {
-  e.preventDefault();
-  $("psDrop").classList.remove("drag-over");
-  handlePsSortingFile(e.dataTransfer.files[0]);
+  e.preventDefault(); $("psDrop").classList.remove("drag-over");
+  handlePsFile(e.dataTransfer.files[0]);
 });
 
-/* ── INIT ──────────────────────────────────────────── */
+/* ── GENERIC TABS ───────────────────────────────────── */
+[3,4].forEach(num => {
+  const fi  = $(`csvFile${num}`);
+  const dz  = $(`dropzone${num}`);
+  const st  = $(`status${num}`);
+
+  const process = async file => {
+    if (!file) return;
+    st.textContent = "Lendo CSV…";
+    const data = parseCSVGeneric(await file.text());
+    renderGeneric(num, data);
+    try { localStorage.setItem(`tab${num}_data`, JSON.stringify({headers:data.headers,rows:data.rows,fn:file.name})); } catch {}
+    st.textContent = `✅ ${fmt(data.rows.length)} registros · ${file.name}`;
+  };
+
+  fi.addEventListener("change", e => process(e.target.files[0]));
+  dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("drag-over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("drag-over"));
+  dz.addEventListener("drop", async e => {
+    e.preventDefault(); dz.classList.remove("drag-over");
+    process(e.dataTransfer.files[0]);
+  });
+});
+
+/* ── INIT ───────────────────────────────────────────── */
 drawGauge(0);
-loadFromFirebase();
+
+// Load tab1 — local first, then Firebase
+if (!loadLocal()) loadFromFirebase();
+
+// Restore Pós Sorting
+try {
+  const ps = JSON.parse(localStorage.getItem("ps_data")||"null");
+  if (ps?.rows?.length) {
+    renderPosSorting(ps.rows, ps.headers||[]);
+    $("status2").textContent = `✅ ${fmt(ps.rows.length)} registros (salvo)`;
+  }
+} catch {}
+
+// Restore generic tabs
+[3,4].forEach(num => {
+  try {
+    const d = JSON.parse(localStorage.getItem(`tab${num}_data`)||"null");
+    if (d?.rows?.length) {
+      renderGeneric(num, d);
+      $(`status${num}`).textContent = `✅ ${fmt(d.rows.length)} registros (salvo)`;
+    }
+  } catch {}
+});
 </script>
 </body>
 </html>
