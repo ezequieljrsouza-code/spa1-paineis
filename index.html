@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painéis de Auditoria</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -85,6 +87,8 @@
 
     .tab-panel        { display: none; padding: 20px; max-width: 1700px; margin: 0 auto; }
     .tab-panel.active { display: block; }
+
+    #captureArea { max-width: 1400px; margin: 0 auto; }
 
     /* ─── PANEL TOPBAR ────────────────────────────── */
     .panel-topbar {
@@ -478,7 +482,7 @@
 <nav class="tab-nav" id="tabNav">
   <div class="tab-nav-brand">📊 AUDITORIA</div>
   <button class="tab-btn active"  onclick="switchTab('tab1', this)">🛒 Carrinhos SPA1</button>
-  <button class="tab-btn"         onclick="switchTab('tab2', this)">📦 Painel 2</button>
+  <button class="tab-btn"         onclick="switchTab('tab2', this)">📋 Pós Sorting</button>
   <button class="tab-btn"         onclick="switchTab('tab3', this)">👥 Painel 3</button>
   <button class="tab-btn"         onclick="switchTab('tab4', this)">📊 Painel 4</button>
 </nav>
@@ -601,33 +605,78 @@
   </div><!-- /captureArea -->
 </div>
 
-<!-- ═══ TAB 2 ════════════════════════════════════════════════════ -->
+<!-- ═══ TAB 2 — PÓS SORTING ══════════════════════════════════════ -->
 <div class="tab-panel" id="tab2">
-  <div class="panel-topbar" style="margin-bottom:24px">
-    <div class="panel-title">📦 Painel 2</div>
+  <div class="panel-topbar" style="margin-bottom:20px">
+    <div class="panel-title">📋 Pós Sorting — Faltantes SPA1</div>
     <div class="panel-actions">
+      <label class="btn btn-white" id="dropzone2" style="cursor:pointer">
+        📤 Upload XLSX / CSV
+        <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
+      </label>
       <span class="status-text" id="status2">Aguardando arquivo…</span>
     </div>
   </div>
-  <div class="placeholder-wrap">
-    <label class="upload-dropzone" id="dropzone2">
+
+  <!-- Upload dropzone (shown before data) -->
+  <div class="placeholder-wrap" id="ps-placeholder">
+    <label class="upload-dropzone" id="psDrop" style="cursor:pointer">
       <span class="upload-icon">📂</span>
-      <div class="upload-title">Carregar CSV — Painel 2</div>
-      <div class="upload-sub">Clique aqui ou arraste seu arquivo .csv</div>
-      <input type="file" id="csvFile2" accept=".csv,text/csv" />
+      <div class="upload-title">Carregar Faltantes — Pós Sorting</div>
+      <div class="upload-sub">Clique aqui ou arraste seu arquivo <strong>.xlsx</strong> ou <strong>.csv</strong></div>
+      <input type="file" id="csvFile2b" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
-    <div class="generic-content" id="panel2Content" style="display:none">
-      <div class="chart-panel">
-        <div class="chart-title">Dados — Painel 2</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr id="p2Headers"></tr></thead>
-            <tbody id="p2Table"></tbody>
-          </table>
-        </div>
-        <div class="footer-info"><span id="p2Footer"></span></div>
+  </div>
+
+  <!-- Content (shown after upload) -->
+  <div id="ps-content" style="display:none; max-width:1400px; margin:0 auto;">
+
+    <!-- KPI row -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap:12px; margin-bottom:14px;">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Faltantes</div>
+        <div class="kpi-value" id="ps-total">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label accent">Rotas Afetadas</div>
+        <div class="kpi-value" id="ps-rotas">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="background:var(--orange)">Caminho Estação</div>
+        <div class="kpi-value" id="ps-caminho">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="background:var(--green)">Outras Loc.</div>
+        <div class="kpi-value" id="ps-outras">—</div>
       </div>
     </div>
+
+    <!-- Charts row -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+      <div class="chart-panel" style="margin-bottom:0">
+        <div class="chart-title">Faltantes por Rota (Top 15)</div>
+        <canvas id="psRotaChart" height="140"></canvas>
+      </div>
+      <div class="chart-panel" style="margin-bottom:0">
+        <div class="chart-title">Faltantes por Ponto</div>
+        <canvas id="psPontoChart" height="140"></canvas>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-panel">
+      <div class="chart-title">Base de Faltantes</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr id="psHeaders"></tr>
+          </thead>
+          <tbody id="psTable"></tbody>
+        </table>
+      </div>
+      <div class="footer-info"><span id="psFooter"></span></div>
+    </div>
+
   </div>
 </div>
 
@@ -696,6 +745,12 @@
 const FIREBASE_URL = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
 let currentRows = [];
 let activeChart = null;
+let psRotaChart = null, psPontoChart = null;
+
+// Register datalabels plugin globally
+Chart.register(ChartDataLabels);
+// Default OFF — enable per-chart explicitly
+Chart.defaults.set("plugins.datalabels", { display: false });
 
 const $  = id => document.getElementById(id);
 const nf = new Intl.NumberFormat("pt-BR");
@@ -940,7 +995,15 @@ function render(rows, label = "CSV") {
       },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => `Aderência: ${ctx.raw.toFixed(2).replace(".", ",")}%` } }
+        tooltip: { callbacks: { label: ctx => `Aderência: ${ctx.raw.toFixed(2).replace(".", ",")}%` } },
+        datalabels: {
+          display: true,
+          anchor: "end",
+          align: "top",
+          color: "#002961",
+          font: { weight: "800", size: 11, family: "'Barlow Condensed', sans-serif" },
+          formatter: v => v.toFixed(1).replace(".", ",") + "%"
+        }
       },
       animation: { duration: 900, easing: "easeOutQuart" }
     }
@@ -1024,7 +1087,7 @@ $("printBtn").addEventListener("click", async () => {
 });
 
 /* ── EVENTS: GENERIC TABS ──────────────────────────── */
-[2, 3, 4].forEach(num => {
+[3, 4].forEach(num => {
   const fileInput = $(`csvFile${num}`);
   const dropzone  = $(`dropzone${num}`);
   const statusEl  = $(`status${num}`);
@@ -1053,6 +1116,134 @@ $("printBtn").addEventListener("click", async () => {
     renderGeneric(num, data);
     statusEl.textContent = `${fmt(data.rows.length)} registros carregados`;
   });
+});
+
+/* ── PÓS SORTING ───────────────────────────────────── */
+function renderPosSorting(rows, headers) {
+  $("ps-placeholder").style.display = "none";
+  $("ps-content").style.display     = "block";
+
+  const total   = rows.length;
+  const rotas   = new Set(rows.map(r => r["N.º Rota"]).filter(Boolean)).size;
+  const caminho = rows.filter(r => normalize(r["Localização do pacote"] || "").includes("caminho")).length;
+  const outras  = total - caminho;
+
+  $("ps-total").textContent   = fmt(total);
+  $("ps-rotas").textContent   = fmt(rotas);
+  $("ps-caminho").textContent = fmt(caminho);
+  $("ps-outras").textContent  = fmt(outras);
+
+  // Count by rota
+  const rotaCnt = {};
+  rows.forEach(r => { const v = r["N.º Rota"] || "N/A"; rotaCnt[v] = (rotaCnt[v]||0)+1; });
+  const topRotas = Object.entries(rotaCnt).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+  // Count by ponto
+  const pontoCnt = {};
+  rows.forEach(r => { const v = r["Ponto"] || "N/A"; pontoCnt[v] = (pontoCnt[v]||0)+1; });
+  const topPontos = Object.entries(pontoCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  if (psRotaChart)  { psRotaChart.destroy(); }
+  if (psPontoChart) { psPontoChart.destroy(); }
+
+  const dlBase = {
+    display: true,
+    anchor: "end", align: "top",
+    font: { weight: "800", size: 11, family: "'Barlow Condensed', sans-serif" },
+    color: "#002961",
+    formatter: v => v
+  };
+
+  psRotaChart = new Chart($("psRotaChart"), {
+    type: "bar",
+    data: {
+      labels: topRotas.map(([k]) => k),
+      datasets: [{
+        label: "Faltantes",
+        data: topRotas.map(([,v]) => v),
+        backgroundColor: "#1a56db",
+        borderRadius: 8,
+        hoverBackgroundColor: "#002961"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } },
+      plugins: { legend: { display: false }, datalabels: dlBase, tooltip: { callbacks: { label: ctx => `Faltantes: ${ctx.raw}` } } },
+      animation: { duration: 700, easing: "easeOutQuart" }
+    }
+  });
+
+  const pontoColors = ["#002961","#06418f","#1a56db","#60a5fa","#93c5fd","#bfdbfe","#002961","#06418f","#1a56db","#60a5fa"];
+  psPontoChart = new Chart($("psPontoChart"), {
+    type: "doughnut",
+    data: {
+      labels: topPontos.map(([k]) => k),
+      datasets: [{ data: topPontos.map(([,v])=>v), backgroundColor: pontoColors, borderWidth: 2, borderColor: "#fff" }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "right", labels: { font: { family: "'Barlow',sans-serif", weight: "700", size:12 }, color:"#0f172a" } },
+        datalabels: {
+          display: true,
+          color: "#fff", font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" },
+          formatter: (v, ctx) => {
+            const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+            return total ? Math.round(v/total*100)+"%" : "";
+          }
+        },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}` } }
+      }
+    }
+  });
+
+  // Table
+  const displayHeaders = headers.length ? headers : Object.keys(rows[0] || {});
+  $("psHeaders").innerHTML = displayHeaders.map(h => `<th>${escH(h)}</th>`).join("");
+  $("psTable").innerHTML   = rows.slice(0, 300).map(r =>
+    `<tr>${displayHeaders.map(h => `<td>${escH(r[h])}</td>`).join("")}</tr>`
+  ).join("");
+  $("psFooter").textContent = `${fmt(rows.length)} registros · ${displayHeaders.length} colunas · exibindo ${Math.min(rows.length,300)}`;
+}
+
+async function handlePsSortingFile(file) {
+  if (!file) return;
+  $("status2").textContent = "Lendo arquivo…";
+  try {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "xlsx" || ext === "xls") {
+      const buf  = await file.arrayBuffer();
+      const wb   = XLSX.read(buf, { type: "array" });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const hdrs = data.length ? Object.keys(data[0]) : [];
+      renderPosSorting(data, hdrs);
+      $("status2").textContent = `${fmt(data.length)} registros carregados · ${file.name}`;
+    } else {
+      const text = await file.text();
+      const parsed = parseCSVGeneric(text);
+      renderPosSorting(parsed.rows, parsed.headers);
+      $("status2").textContent = `${fmt(parsed.rows.length)} registros carregados · ${file.name}`;
+    }
+  } catch(err) {
+    console.error(err);
+    $("status2").textContent = "Erro ao processar arquivo.";
+  }
+}
+
+// Pós Sorting: topbar upload button
+$("csvFile2").addEventListener("change", e => handlePsSortingFile(e.target.files[0]));
+
+// Pós Sorting: center dropzone
+$("csvFile2b").addEventListener("change", e => handlePsSortingFile(e.target.files[0]));
+$("psDrop").addEventListener("click", () => $("csvFile2b").click());
+$("psDrop").addEventListener("dragover",  e => { e.preventDefault(); $("psDrop").classList.add("drag-over"); });
+$("psDrop").addEventListener("dragleave", ()  => $("psDrop").classList.remove("drag-over"));
+$("psDrop").addEventListener("drop", async e => {
+  e.preventDefault();
+  $("psDrop").classList.remove("drag-over");
+  handlePsSortingFile(e.dataTransfer.files[0]);
 });
 
 /* ── INIT ──────────────────────────────────────────── */
