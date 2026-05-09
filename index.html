@@ -389,12 +389,15 @@
       📤 Upload XLSX / CSV
       <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
+    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ Salvar Imagem</button>
     <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
   </div>
 </nav>
 
 <!-- ═══ TAB 1 — CARRINHOS SPA1 ══════════════════════════════════════ -->
 <div class="tab-panel active" id="tab1">
+
+  <div id="captureArea">
 
   <div class="panel-header">
     <div class="panel-title">🛒 Auditoria de Carrinhos — SPA1</div>
@@ -429,8 +432,6 @@
 
     <button class="filter-reset" onclick="resetFilters()">✖ Limpar Filtros</button>
   </div>
-
-  <div id="captureArea">
 
     <!-- KPI GRID -->
     <div class="kpi-grid">
@@ -640,15 +641,16 @@
       </div>
     </div>
 
-    <!-- 2 charts: top rotas + top pontos doughnut -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+    <!-- 2 charts: top rotas + distribuição por ponto -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" id="ps2CaptureArea">
       <div class="chart-panel" style="margin-bottom:0">
         <div class="chart-title">📍 Faltantes por Rota (Top 15)</div>
         <canvas id="psRotaChart" height="160"></canvas>
       </div>
       <div class="chart-panel" style="margin-bottom:0">
-        <div class="chart-title">🥧 Distribuição por Ponto</div>
+        <div class="chart-title">🏝️ Distribuição por Ponto</div>
         <canvas id="psPontoChart" height="160"></canvas>
+        <div id="psPontoLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
       </div>
     </div>
 
@@ -724,7 +726,8 @@
 
 <!-- ═══ SCRIPTS ══════════════════════════════════════════════════════ -->
 <script>
-const FIREBASE_URL = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
+const FIREBASE_URL    = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
+const FIREBASE_PS_URL = "https://reportinventario-default-rtdb.firebaseio.com/pos_sorting_spa1.json";
 const LS_TAB1 = "audit_spa1_v2";
 
 let currentRows  = [];
@@ -1138,6 +1141,30 @@ $("printBtn").addEventListener("click", async () => {
   } catch(err) { console.error(err); setStatus("Erro ao gerar imagem."); }
 });
 
+$("printBtn2").addEventListener("click", async () => {
+  const btn = $("printBtn2");
+  const prev = btn.textContent;
+  btn.textContent = "⏳ Gerando…";
+  btn.disabled = true;
+  try {
+    const target = document.querySelector("#tab2 > div") || $("tab2");
+    const canvas = await html2canvas(target, {
+      scale: 2, backgroundColor: "#eef3fb", useCORS: true, logging: false,
+      ignoreElements: el => el.id === "tab2Actions" || el.tagName === "NAV"
+    });
+    const link = document.createElement("a");
+    link.download = `pos-sorting-spa1-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL("image/png", 1.0);
+    link.click();
+    btn.textContent = "✅ Salvo!";
+    setTimeout(() => { btn.textContent = prev; btn.disabled = false; }, 2000);
+  } catch(err) {
+    console.error(err);
+    btn.textContent = "❌ Erro";
+    setTimeout(() => { btn.textContent = prev; btn.disabled = false; }, 2000);
+  }
+});
+
 /* ── PÓS SORTING ────────────────────────────────────── */
 function renderPosSorting(rows, headers) {
   $("ps-placeholder").style.display = "none";
@@ -1306,6 +1333,28 @@ async function handlePsFile(file) {
     buildPsTable();
 
     $("status2").textContent = `✅ ${fmt(total)} registros · ${file.name}`;
+
+    // Auto-save to Firebase
+    try {
+      $("status2").textContent = "☁️ Salvando na nuvem…";
+      const ps2Payload = {
+        updatedAt: new Date().toISOString(), fileName: file.name,
+        totalRows: total, caminho, naEstacao: naEst, volumoso, rotas,
+        top15Labels: PS_TOP15_LABELS.slice(), top15Data: PS_TOP15_DATA.slice(),
+        pontoLabels: PS_PONTO_LABELS.slice(), pontoData: PS_PONTO_DATA.slice(),
+        rows: newRaw.slice(0, 2000)   // cap at 2000 for Firebase limits
+      };
+      const res = await fetch(FIREBASE_PS_URL, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(ps2Payload)
+      });
+      $("status2").textContent = res.ok
+        ? `✅ ${fmt(total)} registros · salvo na nuvem · ${file.name}`
+        : `✅ ${fmt(total)} registros · ${file.name} (nuvem indisponível)`;
+    } catch(cloudErr) {
+      console.warn("Firebase tab2:", cloudErr);
+      $("status2").textContent = `✅ ${fmt(total)} registros · ${file.name}`;
+    }
   } catch(err) {
     console.error("handlePsFile error:", err);
     $("status2").textContent = `❌ Erro: ${err.message||"arquivo inválido"}`;
@@ -1426,26 +1475,54 @@ function initPsStatic() {
     }
   });
 
-  // Ponto doughnut
+  // Ponto — horizontal bar (clearer than doughnut for skewed data)
   if (psStaticPontoChart) psStaticPontoChart.destroy();
-  const pColors=["#002961","#06418f","#1a56db","#60a5fa","#3b82f6","#93c5fd","#bfdbfe","#dbeafe"];
+  const pColors = ["#002961","#1a56db","#3b82f6","#60a5fa","#93c5fd","#bfdbfe","#06418f","#0c4a6e"];
+  const pontoTotal = PS_PONTO_DATA.reduce((a,b)=>a+b,0)||1;
   psStaticPontoChart = new Chart($("psPontoChart"), {
-    type:"doughnut",
-    data:{
-      labels:PS_PONTO_LABELS,
-      datasets:[{data:PS_PONTO_DATA,backgroundColor:pColors,borderWidth:2,borderColor:"#fff"}]
+    type: "bar",
+    data: {
+      labels: PS_PONTO_LABELS,
+      datasets: [{
+        label: "Faltantes",
+        data:  PS_PONTO_DATA,
+        backgroundColor: PS_PONTO_DATA.map((v,i) => v===Math.max(...PS_PONTO_DATA)?"#dc2626":pColors[i]||"#1a56db"),
+        borderRadius: 8,
+        hoverBackgroundColor: "#002961"
+      }]
     },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{position:"right",labels:{font:{family:"'Barlow',sans-serif",weight:"700",size:12},color:"#0f172a"}},
-        datalabels:{display:true,color:"#fff",
-          font:{weight:"900",size:12,family:"'Barlow Condensed',sans-serif"},
-          formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t?Math.round(v/t*100)+"%":"";}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}`}}
-      }
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      layout: { padding: { right: 60 } },
+      scales: {
+        x: { beginAtZero:true, grid:{color:"#f1f5f9"}, ticks:{color:"#64748b"} },
+        y: { grid:{display:false}, ticks:{font:{weight:"800",size:13,family:"'Barlow Condensed',sans-serif"},color:"#002961"} }
+      },
+      plugins: {
+        legend: { display:false },
+        datalabels: {
+          display: true, anchor:"end", align:"right",
+          color: ctx => ctx.dataIndex===PS_PONTO_DATA.indexOf(Math.max(...PS_PONTO_DATA))?"#dc2626":"#002961",
+          font: { weight:"900", size:13, family:"'Barlow Condensed',sans-serif" },
+          formatter: (v) => `${v}  (${Math.round(v/pontoTotal*100)}%)`
+        },
+        tooltip: { callbacks:{ label:ctx=>`${ctx.raw} pacotes · ${Math.round(ctx.raw/pontoTotal*100)}%` } }
+      },
+      animation: { duration:700, easing:"easeOutQuart" }
     }
   });
+  // Legend chips
+  const legendEl = $("psPontoLegend");
+  if (legendEl) {
+    legendEl.innerHTML = PS_PONTO_LABELS.map((lbl,i)=>{
+      const bg = PS_PONTO_DATA[i]===Math.max(...PS_PONTO_DATA)?"#dc2626":(pColors[i]||"#1a56db");
+      return `<div style="display:flex;align-items:center;gap:5px;background:${bg}18;border:1.5px solid ${bg}44;border-radius:7px;padding:3px 10px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${bg};display:inline-block"></span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${bg}">Ilha ${escH(lbl)}: ${PS_PONTO_DATA[i]}</span>
+      </div>`;
+    }).join("");
+  }
 
   // Build table from embedded data
   buildPsTable();
