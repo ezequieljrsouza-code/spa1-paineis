@@ -228,15 +228,36 @@
       content: "▶"; position: absolute; right: 0; top: 50%;
       transform: translateY(-50%); color: var(--primary); font-size: 12px;
     }
-    .priority-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 6px; }
-    .priority-item { text-align: center; }
+    .priority-grid { display: grid; grid-template-columns: repeat(10,1fr); gap: 7px; }
+    .priority-item {
+      text-align: center; background: var(--bg); border-radius: 10px;
+      padding: 8px 4px; border: 2px solid transparent;
+      transition: transform .18s, box-shadow .18s;
+      position: relative; cursor: default;
+    }
+    .priority-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .priority-item.p-top1 { border-color: #dc2626; background: #fff5f5; }
+    .priority-item.p-top2 { border-color: #d97706; background: #fffbeb; }
+    .priority-item.p-top3 { border-color: #2563eb; background: #eff6ff; }
+    .priority-rank {
+      position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+      background: var(--primary); color: #fff;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 900;
+      border-radius: 999px; padding: 1px 7px; letter-spacing: .04em; white-space: nowrap;
+    }
+    .priority-item.p-top1 .priority-rank { background: #dc2626; }
+    .priority-item.p-top2 .priority-rank { background: #d97706; }
+    .priority-item.p-top3 .priority-rank { background: #2563eb; }
     .priority-code {
       font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 800;
-      color: var(--primary); border-bottom: 2.5px solid var(--primary);
-      padding-bottom: 3px; margin-bottom: 4px;
+      color: var(--primary); padding-top: 6px; margin-bottom: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .priority-letter {
-      font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 900; color: var(--text);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: var(--text); line-height: 1.1;
+    }
+    .priority-pend {
+      font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 2px;
     }
 
     /* ═══ CHARTS / TABLE ════════════════════════ */
@@ -275,21 +296,22 @@
     .empty-state { text-align: center; padding: 30px; color: var(--muted); font-weight: 600; }
 
     /* ═══ RANKING ═══════════════════════════════ */
-    .ranking-wrap { display: flex; flex-direction: column; gap: 8px; }
-    .ranking-item { display: flex; align-items: center; gap: 10px; }
-    .ranking-medal { font-size: 16px; min-width: 22px; text-align: center; }
+    .ranking-wrap { display: flex; flex-direction: column; gap: 7px; }
+    .ranking-item { display: grid; grid-template-columns: 26px 160px 1fr; align-items: center; gap: 10px; }
+    .ranking-medal { font-size: 16px; text-align: center; }
     .ranking-name {
       font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700;
-      color: var(--text); min-width: 140px; text-align: right;
+      color: var(--text); text-align: right; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
     }
     .ranking-track {
-      flex: 1; height: 28px; background: #eef3fb; border-radius: 8px; overflow: hidden;
+      height: 28px; background: #eef3fb; border-radius: 8px; overflow: hidden; min-width: 0;
     }
     .ranking-fill {
       height: 100%; border-radius: 8px;
       background: linear-gradient(90deg, var(--primary3) 0%, var(--primary) 100%);
       display: flex; align-items: center; justify-content: flex-end;
-      padding-right: 10px; transition: width .7s ease;
+      padding-right: 10px; transition: width .7s ease; min-width: 36px;
     }
     .ranking-val {
       font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 900; color: #fff;
@@ -471,6 +493,7 @@
         <span class="chart-hint">▼ decrescente · clique numa barra para filtrar</span>
       </div>
       <canvas id="aderenciaChart" height="90" style="cursor:pointer"></canvas>
+      <div id="aderenciaTable" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
 
     <!-- TABLE -->
@@ -816,8 +839,15 @@ function renderDashboard(rows) {
   });
   const priority = [...conts].sort((a,b)=>pendPorCont[b]-pendPorCont[a]).slice(0,10);
   const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const prioClass = i => i===0 ? "p-top1" : i===1 ? "p-top2" : i===2 ? "p-top3" : "";
   $("priorityGrid").innerHTML = priority.length
-    ? priority.map((c,i)=>`<div class="priority-item"><div class="priority-code">${escH(c)}</div><div class="priority-letter">${LETTERS[i]||"?"}</div></div>`).join("")
+    ? priority.map((c,i)=>`
+        <div class="priority-item ${prioClass(i)}">
+          <div class="priority-rank">#${i+1}</div>
+          <div class="priority-code">${escH(c)}</div>
+          <div class="priority-letter">${LETTERS[i]||"?"}</div>
+          <div class="priority-pend">${pendPorCont[c]} pend.</div>
+        </div>`).join("")
     : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">Sem contenedores para exibir.</div>`;
 
   // Aderência por destino — sorted DESCENDING by adh%
@@ -844,12 +874,13 @@ function renderDashboard(rows) {
     },
     options: {
       responsive: true,
+      layout: { padding: { top: 28 } },
       onClick: (_, els) => {
         if (!els.length) return;
         setContFilter(adhData[els[0].index].cont);
       },
       scales: {
-        y: { beginAtZero:true, max:100, ticks:{callback:v=>v+"%"}, grid:{color:"#f1f5f9"} },
+        y: { beginAtZero:true, max:110, ticks:{callback:v=>v<=100?v+"%":""}, grid:{color:"#f1f5f9"} },
         x: { grid:{display:false} }
       },
       plugins: {
@@ -857,13 +888,27 @@ function renderDashboard(rows) {
         tooltip: { callbacks:{ label:ctx=>`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%` } },
         datalabels: {
           display: true, anchor:"end", align:"top", color:"#002961",
-          font:{ weight:"800", size:10, family:"'Barlow Condensed',sans-serif" },
-          formatter: v => v.toFixed(1).replace(".",",")+"%"
+          font:{ weight:"900", size:12, family:"'Barlow Condensed',sans-serif" },
+          formatter: v => v.toFixed(1).replace(".",",")+"%",
+          padding: { bottom: 4 }
         }
       },
       animation: { duration:700, easing:"easeOutQuart" }
     }
   });
+
+  // Summary chips below the chart
+  const aderenciaTableEl = $("aderenciaTable");
+  if (aderenciaTableEl) {
+    aderenciaTableEl.innerHTML = adhData.map(d => {
+      const color = d.adh>=90?"#16a34a":d.adh>=50?"#1a56db":"#dc2626";
+      const bg    = d.adh>=90?"#d1fae5":d.adh>=50?"#dbeafe":"#fee2e2";
+      return `<div onclick="setContFilter('${escH(d.cont)}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}22;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#374151;">${escH(d.cont)}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".",",")}%</span>
+      </div>`;
+    }).join("");
+  }
 
   // Table
   $("dataTable").innerHTML = rows.slice(0,300).map(r=>`
