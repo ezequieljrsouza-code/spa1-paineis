@@ -383,6 +383,14 @@
     <button class="nav-btn nav-btn-ghost" id="reloadBtn">🔄 Nuvem</button>
     <span class="status-chip" id="statusText">Aguardando dados…</span>
   </div>
+
+  <div class="nav-actions" id="tab2Actions" style="display:none;">
+    <label class="nav-btn nav-btn-white" style="cursor:pointer">
+      📤 Upload XLSX / CSV
+      <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
+    </label>
+    <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
+  </div>
 </nav>
 
 <!-- ═══ TAB 1 — CARRINHOS SPA1 ══════════════════════════════════════ -->
@@ -531,15 +539,8 @@
 
 <!-- ═══ TAB 2 — PÓS SORTING ═════════════════════════════════════════ -->
 <div class="tab-panel" id="tab2">
-  <div class="panel-header" style="text-align:center;">
+  <div class="panel-header">
     <div class="panel-title" style="text-align:center;width:100%">📋 Pós Sorting — Faltantes SPA1</div>
-    <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;">
-      <label class="nav-btn nav-btn-white" style="cursor:pointer">
-        📤 Upload XLSX / CSV
-        <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
-      </label>
-      <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
-    </div>
   </div>
 
   <div style="max-width:1400px;margin:0 auto;">
@@ -752,6 +753,7 @@ function switchTab(id, btn) {
   $(id).classList.add("active");
   btn.classList.add("active");
   $("tab1Actions").style.display = (id === "tab1") ? "flex" : "none";
+  $("tab2Actions").style.display = (id === "tab2") ? "flex" : "none";
   if (id === "tab2") { setTimeout(()=>{ try { initPsStatic(); } catch(e){} }, 50); }
 }
 
@@ -890,15 +892,30 @@ function parseCSV(text) {
 
 function parseCSVGeneric(text) {
   text = text.replace(/^\uFEFF/, "");
-  const lines = text.split(/\r?\n/).filter(l=>l.trim());
-  if (!lines.length) return { headers:[], rows:[] };
-  const headers = lines[0].split(",").map(h=>h.trim().replace(/^"|"$/g,""));
-  const rows = lines.slice(1).map(line=>{
-    const cols = line.split(",").map(c=>c.trim().replace(/^"|"$/g,""));
+  // RFC-4180 compliant field parser
+  function parseFields(line) {
+    const fields = []; let field = "", inQ = false, i = 0;
+    while (i < line.length) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQ = !inQ; i++; continue;
+      }
+      if (c === ',' && !inQ) { fields.push(field.trim()); field = ""; i++; continue; }
+      field += c; i++;
+    }
+    fields.push(field.trim());
+    return fields;
+  }
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return { headers: [], rows: [] };
+  const headers = parseFields(lines[0]).map(h => h.replace(/^"|"$/g, ""));
+  const rows = lines.slice(1).map(line => {
+    const cols = parseFields(line);
     const obj = {};
-    headers.forEach((h,i)=>obj[h]=cols[i]||"");
+    headers.forEach((h, i) => obj[h] = (cols[i] || "").replace(/^"|"$/g, ""));
     return obj;
-  }).filter(r=>Object.values(r).some(v=>v));
+  }).filter(r => Object.values(r).some(v => v));
   return { headers, rows };
 }
 
@@ -1192,33 +1209,110 @@ async function handlePsFile(file) {
   $("status2").textContent = "Lendo arquivo…";
   try {
     const ext = file.name.split(".").pop().toLowerCase();
-    let rows, headers;
+    let rows;
     if (ext==="xlsx"||ext==="xls") {
-      const buf  = await file.arrayBuffer();
-      const wb   = XLSX.read(buf, {type:"array"});
-      const ws   = wb.Sheets[wb.SheetNames[0]];
-      rows    = XLSX.utils.sheet_to_json(ws, {defval:""});
-      headers = rows.length ? Object.keys(rows[0]) : [];
+      const buf = await file.arrayBuffer();
+      const wb  = XLSX.read(buf, {type:"array"});
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, {defval:""});
     } else {
       const parsed = parseCSVGeneric(await file.text());
-      rows = parsed.rows; headers = parsed.headers;
+      rows = parsed.rows;
     }
-    renderPosSorting(rows, headers);
-    // Auto-save
-    try { localStorage.setItem("ps_data", JSON.stringify({rows,headers,fn:file.name,ts:Date.now()})); } catch {}
-    $("status2").textContent = `✅ ${fmt(rows.length)} registros · ${file.name}`;
-  } catch(err) { console.error(err); $("status2").textContent = "Erro ao processar arquivo."; }
+
+    if (!rows.length) { $("status2").textContent = "Arquivo sem registros."; return; }
+
+    // Normalize key: strip accents, dots, special chars, lowercase
+    const slug = s => String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/gi,"").toLowerCase();
+
+    // Build slug→original key map
+    const colMap = {};
+    Object.keys(rows[0]).forEach(k => { colMap[slug(k)] = k; });
+
+    // Find best column match — exact slug, then partial
+    const getCol = (r, ...slugs) => {
+      for (const s of slugs) {
+        if (colMap[s] !== undefined) return String(r[colMap[s]]||"").trim();
+        const found = Object.keys(colMap).find(ck => ck.includes(s) || s.includes(ck));
+        if (found) return String(r[colMap[found]]||"").trim();
+      }
+      // Fallback: search all keys for partial match
+      for (const s of slugs) {
+        const key = Object.keys(rows[0]).find(k => slug(k).includes(s.slice(0,4)));
+        if (key) return String(r[key]||"").trim();
+      }
+      return "";
+    };
+
+    // Build PS_RAW-compatible array [id, rota, parada, ponto, localizacao, detalhe]
+    const newRaw = rows.map(r => [
+      getCol(r, "idpacote", "pacote", "id"),
+      getCol(r, "nrota", "rota", "route").replace(/^>/, ""),   // strip leading >
+      getCol(r, "parada", "stop"),
+      getCol(r, "ponto", "point"),
+      getCol(r, "localizacaodopacote", "localizacao", "localiz", "location"),
+      getCol(r, "detalhedo", "detalhe", "detail")
+    ]);
+
+    // Recompute KPIs
+    const total    = newRaw.length;
+    const caminho  = newRaw.filter(r => normalize(String(r[4])).includes("caminho")).length;
+    const naEst    = newRaw.filter(r => { const n=normalize(String(r[4])); return n.includes("estac") && !n.includes("caminho"); }).length;
+    const volumoso = newRaw.filter(r => normalize(String(r[5])).includes("volum")).length;
+    const rotas    = new Set(newRaw.map(r => r[1]).filter(Boolean)).size;
+
+    // Update KPI cards
+    const kpiEls = document.querySelectorAll("#tab2 .kpi-value");
+    if (kpiEls[0]) kpiEls[0].textContent = fmt(total);
+    if (kpiEls[1]) kpiEls[1].textContent = fmt(rotas);
+    if (kpiEls[2]) kpiEls[2].textContent = fmt(caminho);
+    if (kpiEls[3]) kpiEls[3].textContent = fmt(naEst);
+    if (kpiEls[4]) kpiEls[4].textContent = fmt(volumoso);
+
+    // Update caminho/naEst mini cards
+    const miniVals = document.querySelectorAll("#tab2 [style*='font-size:26px']");
+    if (miniVals[0]) miniVals[0].textContent = fmt(caminho);
+    if (miniVals[1]) miniVals[1].textContent = fmt(naEst);
+
+    // Update PS_RAW globally and rebuild table + charts
+    PS_RAW.length = 0;
+    newRaw.forEach(r => PS_RAW.push(r));
+
+    // Recompute top15 rotas
+    const rotaCnt = {};
+    newRaw.forEach(r=>{ const v=String(r[1]||"N/A"); rotaCnt[v]=(rotaCnt[v]||0)+1; });
+    const top15 = Object.entries(rotaCnt).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    PS_TOP15_LABELS.length=0; PS_TOP15_DATA.length=0;
+    top15.forEach(([k,v])=>{ PS_TOP15_LABELS.push(k); PS_TOP15_DATA.push(v); });
+
+    // Recompute pontos
+    const pontoCnt = {};
+    newRaw.forEach(r=>{ const v=String(r[3]||"?"); pontoCnt[v]=(pontoCnt[v]||0)+1; });
+    const pontoSorted = Object.entries(pontoCnt).sort((a,b)=>b[1]-a[1]);
+    PS_PONTO_LABELS.length=0; PS_PONTO_DATA.length=0;
+    pontoSorted.forEach(([k,v])=>{ PS_PONTO_LABELS.push(k); PS_PONTO_DATA.push(v); });
+
+    // Update ilha table
+    const ilhaHdr = document.querySelector("#tab2 thead tr");
+    const ilhaRow = document.querySelector("#tab2 tbody tr");
+    if (ilhaHdr && ilhaRow) {
+      const colors = ["#dc2626","#1a56db","#06418f","#06418f","#06418f","#06418f","#06418f","#06418f","#06418f","#06418f"];
+      ilhaHdr.innerHTML = pontoSorted.map(([k])=>`<th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">${escH(k)}</th>`).join("");
+      ilhaRow.innerHTML = pontoSorted.map(([,v],i)=>`<td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:${colors[i]||"#1a56db"};color:#fff;">${fmt(v)}</td>`).join("");
+    }
+
+    // Reinit charts with new data
+    initPsStatic();
+    buildPsTable();
+
+    $("status2").textContent = `✅ ${fmt(total)} registros · ${file.name}`;
+  } catch(err) {
+    console.error("handlePsFile error:", err);
+    $("status2").textContent = `❌ Erro: ${err.message||"arquivo inválido"}`;
+  }
 }
 
-$("csvFile2").addEventListener("change",  e => handlePsFile(e.target.files[0]));
-$("csvFile2b").addEventListener("change", e => handlePsFile(e.target.files[0]));
-$("psDrop").addEventListener("click",     () => $("csvFile2b").click());
-$("psDrop").addEventListener("dragover",  e => { e.preventDefault(); $("psDrop").classList.add("drag-over"); });
-$("psDrop").addEventListener("dragleave", () => $("psDrop").classList.remove("drag-over"));
-$("psDrop").addEventListener("drop", async e => {
-  e.preventDefault(); $("psDrop").classList.remove("drag-over");
-  handlePsFile(e.dataTransfer.files[0]);
-});
+$("csvFile2").addEventListener("change", e => handlePsFile(e.target.files[0]));
 
 /* ── GENERIC TABS ───────────────────────────────────── */
 [3,4].forEach(num => {
@@ -1261,11 +1355,13 @@ function initPsStatic() {
     const W=canvas.width, H=canvas.height;
     ctx.clearRect(0,0,W,H);
     const cx=W/2, cy=H*0.83, r=Math.min(W*0.40,H*0.72), lw=Math.max(13,r*0.11);
+    // compute live totals from PS_RAW
+    const liveTotal   = PS_RAW.length || 314;
+    const liveCaminho = PS_RAW.filter(r=>normalize(String(r[4])).includes("caminho")).length || 226;
+    const pct = (liveCaminho/liveTotal)*100;
     // track
     ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
     ctx.strokeStyle="#e2e8f0"; ctx.lineWidth=lw; ctx.lineCap="butt"; ctx.stroke();
-    // fill — caminho 72% of total
-    const pct = (226/314)*100;
     const angle = Math.PI+(pct/100)*Math.PI;
     const grad = ctx.createLinearGradient(cx-r,cy,cx+r,cy);
     grad.addColorStop(0,"#1a56db"); grad.addColorStop(0.6,"#002961"); grad.addColorStop(1,"#d97706");
@@ -1277,12 +1373,12 @@ function initPsStatic() {
     // text
     ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillStyle="#002961";
     ctx.font=`900 ${Math.round(r*0.28)}px 'Barlow Condensed',sans-serif`;
-    ctx.fillText("314", cx, cy-r*0.26);
+    ctx.fillText(String(liveTotal), cx, cy-r*0.26);
     ctx.fillStyle="#64748b"; ctx.font=`600 ${Math.round(r*0.13)}px 'Barlow',sans-serif`;
     ctx.fillText("PENDENTES", cx, cy-r*0.07);
     ctx.font=`700 ${Math.round(r*0.12)}px 'Barlow',sans-serif`; ctx.fillStyle="#94a3b8";
     ctx.textAlign="left";  ctx.fillText("0",    cx-r-3, cy+11);
-    ctx.textAlign="right"; ctx.fillText("314",  cx+r+3, cy+11);
+    ctx.textAlign="right"; ctx.fillText(String(liveTotal),  cx+r+3, cy+11);
   })();
 
   // Det chart — horizontal bars
