@@ -430,6 +430,11 @@
       <span class="filter-cont-tag-x" onclick="clearCont()">✖</span>
     </div>
 
+    <div class="filter-cont-tag" id="repTag" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">
+      👤 <span id="repTagVal"></span>
+      <span class="filter-cont-tag-x" onclick="clearRep()">✖</span>
+    </div>
+
     <button class="filter-reset" onclick="resetFilters()">✖ Limpar Filtros</button>
   </div>
 
@@ -507,7 +512,12 @@
 
     <!-- TABLE -->
     <div class="table-panel">
-      <div class="chart-title">Base Auditada</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+        <div class="chart-title" style="margin-bottom:0">📋 Base Auditada</div>
+        <input id="baseSearch" type="text" placeholder="🔍 Buscar em qualquer coluna…"
+          oninput="setSearch(this.value)"
+          style="flex:1;min-width:200px;border:1.5px solid rgba(0,41,97,.2);border-radius:8px;padding:6px 12px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;" />
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -663,10 +673,11 @@
     <div class="table-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
         <div class="chart-title" style="margin-bottom:0">📋 Base de Faltantes</div>
-        <input id="psSearch" type="text" placeholder="🔍 Buscar por ID, Rota ou Localização…"
+        <input id="psSearch" type="text" placeholder="🔍 Buscar em qualquer coluna…"
           style="flex:1;min-width:180px;border:1.5px solid rgba(0,41,97,.2);border-radius:8px;padding:6px 12px;font-family:'Barlow',sans-serif;font-size:13px;outline:none;"
           oninput="filterPsTable(this.value)" />
       </div>
+      <div id="psFilterChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center;"></div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -751,6 +762,9 @@ let psPontoChart = null;
 let fEstado = "all";
 let fTurno  = "all";
 let fCont   = null;
+let fRep    = null;
+let fSearch = "";
+let rankExpanded = false;
 
 Chart.register(ChartDataLabels);
 Chart.defaults.set("plugins.datalabels", { display: false });
@@ -783,12 +797,42 @@ function classifyTurno(cont) {
 
 /* ── FILTER FUNCTIONS ──────────────────────────────── */
 function getFiltered() {
+  const lq = (fSearch||"").trim().toLowerCase();
   return currentRows.filter(r => {
     if (fEstado !== "all" && normalize(r.estado) !== fEstado) return false;
     if (fTurno  !== "all" && classifyTurno(r.contenedor)  !== fTurno) return false;
     if (fCont   && r.contenedor !== fCont) return false;
+    if (fRep    && r.repAuditoria !== fRep) return false;
+    if (lq) {
+      // Search across all known fields
+      const hay = [r.shipmentId, r.dataAuditoria, r.contenedor, r.estado, r.repAuditoria]
+        .map(v => String(v||"").toLowerCase()).join(" | ");
+      if (!hay.includes(lq)) return false;
+    }
     return true;
   });
+}
+
+function setRepFilter(name) {
+  if (fRep === name) { fRep = null; $("repTag").classList.remove("visible"); }
+  else { fRep = name; $("repTagVal").textContent = name; $("repTag").classList.add("visible"); }
+  renderDashboard(getFiltered());
+}
+
+function clearRep() {
+  fRep = null;
+  $("repTag").classList.remove("visible");
+  renderDashboard(getFiltered());
+}
+
+function setSearch(v) {
+  fSearch = v;
+  renderDashboard(getFiltered());
+}
+
+function toggleRankExpand() {
+  rankExpanded = !rankExpanded;
+  renderDashboard(getFiltered());
 }
 
 function applyFilters() {
@@ -818,11 +862,13 @@ function clearCont() {
 }
 
 function resetFilters() {
-  fEstado = "all"; fTurno = "all"; fCont = null;
+  fEstado = "all"; fTurno = "all"; fCont = null; fRep = null; fSearch = "";
   $("filterEstado").value = "all";
   document.querySelectorAll("#turnoChips .filter-chip").forEach(c => c.classList.remove("active"));
   document.querySelector("[data-turno='all']").classList.add("active");
   $("contTag").classList.remove("visible");
+  if ($("repTag")) $("repTag").classList.remove("visible");
+  if ($("baseSearch")) $("baseSearch").value = "";
   renderDashboard(currentRows);
 }
 
@@ -1059,17 +1105,26 @@ function renderDashboard(rows) {
   const sorted  = Object.entries(repCnt).sort((a,b)=>b[1]-a[1]);
   const maxVal  = sorted[0]?.[1] || 1;
   const medals  = ["🥇","🥈","🥉"];
+  const visible = rankExpanded ? sorted : sorted.slice(0, 5);
+  const hasMore = sorted.length > 5;
   $("rankingWrap").innerHTML = sorted.length
-    ? sorted.map(([name,cnt],i)=>`
-        <div class="ranking-item">
-          <span class="ranking-medal">${medals[i]||""}</span>
+    ? visible.map(([name,cnt],i)=>{
+        const isActive = fRep === name;
+        return `
+        <div class="ranking-item" onclick="setRepFilter('${escH(name).replace(/'/g,"\\'")}')" style="cursor:pointer;${isActive?'background:#dbeafe;border-radius:8px;padding:3px;':''}" title="Clique para filtrar por este auditor">
+          <span class="ranking-medal">${medals[i]||"<span style='font-size:11px;font-weight:800;color:#64748b'>"+(i+1)+"º</span>"}</span>
           <div class="ranking-name">${escH(name)}</div>
           <div class="ranking-track">
             <div class="ranking-fill" style="width:${(cnt/maxVal*100).toFixed(1)}%">
               <span class="ranking-val">${fmt(cnt)}</span>
             </div>
           </div>
-        </div>`).join("")
+        </div>`;
+      }).join("") +
+      (hasMore ? `
+        <button onclick="toggleRankExpand()" style="margin-top:6px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.05em;transition:background .2s;align-self:center;">
+          ${rankExpanded ? `▲ MOSTRAR APENAS TOP 5` : `▼ VER TODOS (${sorted.length})`}
+        </button>` : ``)
     : `<div class="empty-state">Nenhum dado de Rep Auditoria.</div>`;
 }
 
@@ -1406,6 +1461,107 @@ const PS_PONTO_DATA   = [287,21,1,1,1,1,1,1];
 
 let psStaticRotaChart = null, psStaticPontoChart = null, psStaticDetChart = null;
 
+// Pós Sorting filter state
+let psFilters = { rota:null, ponto:null, loc:null };
+
+function psApplyFilter(type, value) {
+  if (psFilters[type] === value) psFilters[type] = null;
+  else psFilters[type] = value;
+  psRefreshAll();
+}
+
+function psClearFilters() {
+  psFilters = { rota:null, ponto:null, loc:null };
+  psRefreshAll();
+}
+
+function psGetFiltered() {
+  return PS_RAW.filter(r => {
+    if (psFilters.rota && r[1] !== psFilters.rota) return false;
+    if (psFilters.ponto && r[3] !== psFilters.ponto) return false;
+    if (psFilters.loc) {
+      const n = normalize(String(r[4]||""));
+      if (psFilters.loc === "caminho" && !n.includes("caminho")) return false;
+      if (psFilters.loc === "estacao" && (!n.includes("estac") || n.includes("caminho"))) return false;
+    }
+    return true;
+  });
+}
+
+function psRefreshAll() {
+  const filtered = psGetFiltered();
+  // Update filter chips display
+  const chipsEl = $("psFilterChips");
+  if (chipsEl) {
+    const chips = [];
+    if (psFilters.rota)  chips.push(`<span style="background:#dbeafe;color:#1e40af;border:1.5px solid #93c5fd;border-radius:7px;padding:3px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" onclick="psApplyFilter('rota','${escH(psFilters.rota)}')">📍 ${escH(psFilters.rota)} <span style="font-size:14px">✖</span></span>`);
+    if (psFilters.ponto) chips.push(`<span style="background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d;border-radius:7px;padding:3px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" onclick="psApplyFilter('ponto','${escH(psFilters.ponto)}')">🏝️ Ilha ${escH(psFilters.ponto)} <span style="font-size:14px">✖</span></span>`);
+    if (psFilters.loc)   chips.push(`<span style="background:#dcfce7;color:#166534;border:1.5px solid #86efac;border-radius:7px;padding:3px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" onclick="psApplyFilter('loc','${escH(psFilters.loc)}')">${psFilters.loc==='caminho'?'🚚 Caminho':'🏠 Na Estação'} <span style="font-size:14px">✖</span></span>`);
+    if (chips.length) chips.push(`<button onclick="psClearFilters()" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;border-radius:7px;padding:3px 10px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.05em;">✖ LIMPAR</button>`);
+    chipsEl.innerHTML = chips.length
+      ? `<span style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:.06em;margin-right:4px">FILTROS:</span>` + chips.join("")
+      : "";
+  }
+  // Rebuild table, charts and ilha row from filtered data
+  buildPsTable(filtered);
+  psRebuildCharts(filtered);
+}
+
+function psRebuildCharts(filtered) {
+  // Recompute counts
+  const rotaCnt = {}, pontoCnt = {};
+  let caminho = 0, naEst = 0;
+  filtered.forEach(r => {
+    const v = String(r[1]||"N/A"); rotaCnt[v] = (rotaCnt[v]||0)+1;
+    const p = String(r[3]||"?");   pontoCnt[p] = (pontoCnt[p]||0)+1;
+    const n = normalize(String(r[4]||""));
+    if (n.includes("caminho")) caminho++;
+    else if (n.includes("estac")) naEst++;
+  });
+  const top15 = Object.entries(rotaCnt).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const pSorted = Object.entries(pontoCnt).sort((a,b)=>b[1]-a[1]);
+
+  if (psStaticRotaChart) {
+    psStaticRotaChart.data.labels = top15.map(e=>e[0]);
+    psStaticRotaChart.data.datasets[0].data = top15.map(e=>e[1]);
+    const m = Math.max(...top15.map(e=>e[1]),1);
+    psStaticRotaChart.data.datasets[0].backgroundColor = top15.map((e,i) =>
+      psFilters.rota === e[0] ? "#dc2626" : (i===0 ? "#dc2626" : i<3 ? "#d97706" : i<6 ? "#1a56db" : "#60a5fa")
+    );
+    psStaticRotaChart.update();
+  }
+  if (psStaticPontoChart) {
+    psStaticPontoChart.data.labels = pSorted.map(e=>e[0]);
+    psStaticPontoChart.data.datasets[0].data = pSorted.map(e=>e[1]);
+    const maxP = Math.max(...pSorted.map(e=>e[1]),1);
+    psStaticPontoChart.data.datasets[0].backgroundColor = pSorted.map((e,i) =>
+      psFilters.ponto === e[0] ? "#dc2626" : (e[1]===maxP ? "#dc2626" : ["#002961","#1a56db","#3b82f6","#60a5fa","#93c5fd","#bfdbfe","#06418f","#0c4a6e"][i]||"#1a56db")
+    );
+    psStaticPontoChart.update();
+  }
+  if (psStaticDetChart) {
+    psStaticDetChart.data.datasets[0].data = [caminho, naEst];
+    psStaticDetChart.data.datasets[0].backgroundColor = [
+      psFilters.loc==="caminho" ? "#9a3412" : "#d97706",
+      psFilters.loc==="estacao" ? "#15803d" : "#16a34a"
+    ];
+    psStaticDetChart.update();
+  }
+
+  // Update ilha table row
+  const ilhaHdr = document.querySelector("#tab2 thead tr");
+  const ilhaRow = document.querySelector("#tab2 tbody tr");
+  if (ilhaHdr && ilhaRow) {
+    const colors = ["#dc2626","#1a56db","#06418f","#06418f","#06418f","#06418f","#06418f","#06418f","#06418f","#06418f"];
+    ilhaHdr.innerHTML = pSorted.map(([k]) =>
+      `<th onclick="psApplyFilter('ponto','${escH(k)}')" style="cursor:pointer;color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;${psFilters.ponto===k?'background:rgba(255,255,255,.18)':''}" title="Clique para filtrar">${escH(k)}</th>`
+    ).join("");
+    ilhaRow.innerHTML = pSorted.map(([k,v],i) =>
+      `<td onclick="psApplyFilter('ponto','${escH(k)}')" style="cursor:pointer;text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:${psFilters.ponto===k?'#7c2d12':(colors[i]||"#1a56db")};color:#fff;" title="Clique para filtrar">${fmt(v)}</td>`
+    ).join("");
+  }
+}
+
 function initPsStatic() {
   // Gauge
   (function drawPs2Gauge() {
@@ -1455,9 +1611,15 @@ function initPsStatic() {
     },
     options:{
       indexAxis:"y", responsive:true,
+      onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+      onClick: (_, els) => {
+        if (!els.length) return;
+        psApplyFilter("loc", els[0].index===0 ? "caminho" : "estacao");
+      },
       scales:{ x:{beginAtZero:true,grid:{color:"#f1f5f9"},ticks:{color:"#64748b"}}, y:{grid:{display:false}} },
       plugins:{
         legend:{display:false},
+        tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"right",color:"#002961",
           font:{weight:"900",size:13,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}
       },
@@ -1478,8 +1640,15 @@ function initPsStatic() {
     options:{
       responsive:true,
       layout:{padding:{top:24}},
+      onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+      onClick: (_, els) => {
+        if (!els.length) return;
+        const label = psStaticRotaChart.data.labels[els[0].index];
+        psApplyFilter("rota", label);
+      },
       scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:11}}}},
       plugins:{legend:{display:false},
+        tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"top",color:"#002961",
           font:{weight:"900",size:11,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}},
       animation:{duration:700,easing:"easeOutQuart"}
@@ -1505,6 +1674,12 @@ function initPsStatic() {
     options: {
       indexAxis: "y",
       responsive: true,
+      onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
+      onClick: (_, els) => {
+        if (!els.length) return;
+        const label = psStaticPontoChart.data.labels[els[0].index];
+        psApplyFilter("ponto", label);
+      },
       layout: { padding: { right: 60 } },
       scales: {
         x: { beginAtZero:true, grid:{color:"#f1f5f9"}, ticks:{color:"#64748b"} },
@@ -1535,8 +1710,8 @@ function initPsStatic() {
     }).join("");
   }
 
-  // Build table from embedded data
-  buildPsTable();
+  // Build table and apply current filters (makes ilha table clickable too)
+  psRefreshAll();
 }
 
 // Inline table data (314 rows embedded)
@@ -1571,18 +1746,40 @@ function buildPsTable(data) {
   $("psStaticFooter").textContent = `${count} de 314 registros · FALTANTES_SPA1.xlsx`;
 }
 
+let psSearchQuery = "";
 function filterPsTable(q) {
-  const lq = q.trim().toLowerCase();
-  if (!lq) { buildPsTable(PS_RAW); $("psFilterInfo").textContent=""; return; }
-  const filtered = PS_RAW.filter(r =>
-    String(r[0]).includes(lq) ||
-    String(r[1]).toLowerCase().includes(lq) ||
-    String(r[4]).toLowerCase().includes(lq) ||
-    String(r[3]).toLowerCase().includes(lq)
-  );
-  buildPsTable(filtered);
-  $("psFilterInfo").textContent = `${filtered.length} resultado(s) para "${q}"`;
+  psSearchQuery = (q||"").trim().toLowerCase();
+  psRefreshAll();
 }
+
+// Update psRefreshAll to also apply the search query
+const _psRefreshAllOrig = psRefreshAll;
+psRefreshAll = function() {
+  const baseFiltered = psGetFiltered();
+  const final = psSearchQuery
+    ? baseFiltered.filter(r => r.some(c => String(c||"").toLowerCase().includes(psSearchQuery)))
+    : baseFiltered;
+  // Update chips
+  const chipsEl = $("psFilterChips");
+  if (chipsEl) {
+    const chips = [];
+    if (psFilters.rota)  chips.push(`<span style="background:#dbeafe;color:#1e40af;border:1.5px solid #93c5fd;border-radius:7px;padding:3px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" onclick="psApplyFilter('rota','${escH(psFilters.rota).replace(/'/g,"\\'")}')">📍 ${escH(psFilters.rota)} <span style="font-size:14px">✖</span></span>`);
+    if (psFilters.ponto) chips.push(`<span style="background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d;border-radius:7px;padding:3px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" onclick="psApplyFilter('ponto','${escH(psFilters.ponto).replace(/'/g,"\\'")}')">🏝️ Ilha ${escH(psFilters.ponto)} <span style="font-size:14px">✖</span></span>`);
+    if (psFilters.loc)   chips.push(`<span style="background:#dcfce7;color:#166534;border:1.5px solid #86efac;border-radius:7px;padding:3px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" onclick="psApplyFilter('loc','${psFilters.loc}')">${psFilters.loc==='caminho'?'🚚 Caminho':'🏠 Na Estação'} <span style="font-size:14px">✖</span></span>`);
+    if (chips.length) chips.push(`<button onclick="psClearFilters()" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;border-radius:7px;padding:3px 10px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.05em;">✖ LIMPAR</button>`);
+    chipsEl.innerHTML = chips.length
+      ? `<span style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:.06em;margin-right:4px">FILTROS:</span>` + chips.join("")
+      : "";
+  }
+  buildPsTable(final);
+  // For charts, use baseFiltered (without search) so user can find context
+  psRebuildCharts(baseFiltered);
+  // Filter info
+  const info = $("psFilterInfo");
+  if (info) info.textContent = (psSearchQuery || psFilters.rota || psFilters.ponto || psFilters.loc)
+    ? `${final.length} de ${PS_RAW.length} registros`
+    : "";
+};
 
 // Init on tab switch - detect when tab2 becomes visible
 const _origSwitchTab = switchTab;
