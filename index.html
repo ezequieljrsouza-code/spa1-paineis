@@ -508,7 +508,12 @@
     <div class="chart-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap;">
         <div class="chart-title" style="margin-bottom:0">Aderência por Destino</div>
-        <span class="chart-hint">▼ decrescente · clique numa barra para filtrar</span>
+        <span class="chart-hint">clique numa barra para filtrar por contenedor</span>
+        <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;">
+          <button id="adhFilterAll"    onclick="setAdhFilter('all')"     style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #002961;background:#002961;color:#fff;cursor:pointer;transition:.2s">Todos</button>
+          <button id="adhFilterBelow" onclick="setAdhFilter('below')"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #dc2626;background:#fff;color:#dc2626;cursor:pointer;transition:.2s">&#60; 100%</button>
+          <button id="adhFilterFull"  onclick="setAdhFilter('full')"   style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #16a34a;background:#fff;color:#16a34a;cursor:pointer;transition:.2s">= 100%</button>
+        </div>
       </div>
       <canvas id="aderenciaChart" height="90" style="cursor:pointer"></canvas>
       <div id="aderenciaTable" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
@@ -1045,104 +1050,25 @@ function renderDashboard(rows) {
         </div>`).join("")
     : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">Sem contenedores para exibir.</div>`;
 
-  // Aderência por LOCAL (PROCV: Contenedor → PREFIXO → LOCAL do ROADMAP)
-  const LOCAL_ORDER = ["NEX","SVC","EMN1","EPA1","EPA2","EPA3",
-    "EPA4","EPA5","EPA6","EPA7","EPA8","EPA9","ETO4"];
-
-  // Build PREFIXO→LOCAL map from ROADMAP_DATA (if loaded)
-  const prefToLocal = {};
-  if (typeof ROADMAP_DATA !== "undefined") {
-    ROADMAP_DATA.forEach(r => {
-      const p = String(r.prefixo || "").trim();
-      const l = String(r.local   || "").trim();
-      // Normalize: strip "XPT - " prefix from LOCAL value too
-      const lNorm = l.replace(/^XPT\s*-\s*/i, "").trim();
-      if (p && lNorm && !prefToLocal[p]) prefToLocal[p] = lNorm;
-    });
-  }
-
-  // Group rows by LOCAL (via PREFIXO lookup, fallback to contenedor itself if it matches a LOCAL)
-  const localGroups = {};
-  LOCAL_ORDER.forEach(l => { localGroups[l] = { total: 0, ok: 0 }; });
-
-  rows.forEach(r => {
-    const cont  = String(r.contenedor || "").trim();
-    let   local = prefToLocal[cont] || (LOCAL_ORDER.includes(cont) ? cont : null);
-    if (!local) return;
-    if (!localGroups[local]) localGroups[local] = { total: 0, ok: 0 };
-    localGroups[local].total++;
-    if (normalize(r.estado) === "correto") localGroups[local].ok++;
+  // ── Aderência por Contenedor ─────────────────────────────────────
+  // Build per-contenedor data
+  const adhRaw = conts.map(c => {
+    const t  = rows.filter(r => r.contenedor === c).length;
+    const ok = rows.filter(r => r.contenedor === c && normalize(r.estado) === "correto").length;
+    return { cont: c, adh: t > 0 ? Math.round((ok / t) * 10000) / 100 : 0, total: t, ok };
+  });
+  // Sort: <100% descending first, then =100% alphabetically
+  adhRaw.sort((a, b) => {
+    const aFull = a.adh >= 100, bFull = b.adh >= 100;
+    if (aFull !== bFull) return aFull ? 1 : -1;
+    return b.adh - a.adh;
   });
 
-  // Only show locals that have data; if none (ROADMAP not loaded), fall back to per-contenedor
-  const adhLocals = LOCAL_ORDER
-    .map(l => ({ local: l, ...localGroups[l], adh: localGroups[l]?.total > 0 ? Math.round((localGroups[l].ok / localGroups[l].total) * 10000) / 100 : null }))
-    .filter(d => d.total > 0);
+  // Store globally for filter
+  window._adhRawAll = adhRaw;
+  if (typeof window._adhFilter === "undefined") window._adhFilter = "all";
 
-  // Fallback: per-contenedor (original behavior) when no ROADMAP loaded
-  const adhData = adhLocals.length ? adhLocals.map(d => ({ cont: d.local, adh: d.adh, total: d.total, ok: d.ok }))
-    : conts.map(c => {
-        const t  = rows.filter(r=>r.contenedor===c).length;
-        const ok = rows.filter(r=>r.contenedor===c&&normalize(r.estado)==="correto").length;
-        return { cont:c, adh: t>0 ? Math.round((ok/t)*10000)/100 : 0, total:t, ok };
-      }).sort((a,b) => b.adh - a.adh).slice(0,15);
-
-  const highlight = (d) => d.cont===fCont ? "#d97706" : d.adh>=90 ? "#002961" : d.adh>=50 ? "#1a56db" : "#60a5fa";
-
-  if (activeChart) activeChart.destroy();
-  activeChart = new Chart($("aderenciaChart"), {
-    type: "bar",
-    data: {
-      labels: adhData.map(d=>d.cont),
-      datasets: [{
-        label: "Aderência (%)",
-        data:  adhData.map(d=>d.adh),
-        backgroundColor: adhData.map(d=>highlight(d)),
-        borderRadius: 10,
-        hoverBackgroundColor: "#06418f"
-      }]
-    },
-    options: {
-      responsive: true,
-      layout: { padding: { top: 28 } },
-      onClick: (_, els) => {
-        if (!els.length) return;
-        setContFilter(adhData[els[0].index].cont);
-      },
-      scales: {
-        y: { beginAtZero:true, max:110, ticks:{callback:v=>v<=100?v+"%":""}, grid:{color:"#f1f5f9"} },
-        x: { grid:{display:false}, ticks:{ font:{ weight:"800", size:11, family:"'Barlow Condensed',sans-serif" } } }
-      },
-      plugins: {
-        legend: { display:false },
-        tooltip: { callbacks:{ label:ctx=>{
-          const d = adhData[ctx.dataIndex];
-          return [`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%`, `${d.ok} corretos / ${d.total} total`];
-        }}},
-        datalabels: {
-          display: true, anchor:"end", align:"top", color:"#002961",
-          font:{ weight:"900", size:12, family:"'Barlow Condensed',sans-serif" },
-          formatter: v => v.toFixed(1).replace(".",",")+"%",
-          padding: { bottom: 4 }
-        }
-      },
-      animation: { duration:700, easing:"easeOutQuart" }
-    }
-  });
-
-  // Summary chips below the chart
-  const aderenciaTableEl = $("aderenciaTable");
-  if (aderenciaTableEl) {
-    aderenciaTableEl.innerHTML = adhData.map(d => {
-      const color = d.adh>=90?"#16a34a":d.adh>=50?"#1a56db":"#dc2626";
-      const bg    = d.adh>=90?"#d1fae5":d.adh>=50?"#dbeafe":"#fee2e2";
-      return `<div onclick="setContFilter('${escH(d.cont)}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}22;">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#374151;">${escH(d.cont)}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".",",")}%</span>
-        <span style="font-size:11px;color:#64748b;font-weight:600;">${d.ok}/${d.total}</span>
-      </div>`;
-    }).join("");
-  }
+  renderAderenciaChart(adhRaw, rows, fCont);
 
   // Table
   $("dataTable").innerHTML = rows.slice(0,300).map(r=>`
@@ -1184,7 +1110,94 @@ function renderDashboard(rows) {
     : `<div class="empty-state">Nenhum dado de Rep Auditoria.</div>`;
 }
 
-/* ── RENDER (called after upload — sets currentRows) ─ */
+/* ── ADERÊNCIA CHART RENDER + FILTER ─────────────────────────── */
+function setAdhFilter(mode) {
+  window._adhFilter = mode;
+  // Update button styles
+  const styles = {
+    all:   { id:"adhFilterAll",    bg:"#002961", color:"#fff",    border:"#002961" },
+    below: { id:"adhFilterBelow",  bg:"#dc2626", color:"#fff",    border:"#dc2626" },
+    full:  { id:"adhFilterFull",   bg:"#16a34a", color:"#fff",    border:"#16a34a" }
+  };
+  ["all","below","full"].forEach(k => {
+    const el = $(styles[k].id); if (!el) return;
+    const active = k === mode;
+    el.style.background = active ? styles[k].bg    : "#fff";
+    el.style.color      = active ? styles[k].color : styles[k].bg;
+    el.style.borderColor= styles[k].border;
+  });
+  if (window._adhRawAll) renderAderenciaChart(window._adhRawAll, currentRows, window._fContGlobal || "");
+}
+
+function renderAderenciaChart(adhRaw, rows, fCont) {
+  window._fContGlobal = fCont;
+  const filter = window._adhFilter || "all";
+  const adhData = adhRaw.filter(d =>
+    filter === "all"   ? true :
+    filter === "below" ? d.adh < 100 :
+    d.adh >= 100
+  );
+
+  const highlight = d =>
+    d.cont === fCont ? "#d97706" :
+    d.adh >= 100     ? "#16a34a" :
+    d.adh >= 50      ? "#1a56db" : "#dc2626";
+
+  if (activeChart) activeChart.destroy();
+  activeChart = new Chart($("aderenciaChart"), {
+    type: "bar",
+    data: {
+      labels: adhData.map(d => d.cont),
+      datasets: [{
+        label: "Aderência (%)",
+        data:  adhData.map(d => d.adh),
+        backgroundColor: adhData.map(d => highlight(d)),
+        borderRadius: 10,
+        hoverBackgroundColor: "#06418f"
+      }]
+    },
+    options: {
+      responsive: true,
+      layout: { padding: { top: 28 } },
+      onClick: (_, els) => {
+        if (!els.length) return;
+        setContFilter(adhData[els[0].index].cont);
+      },
+      scales: {
+        y: { beginAtZero: true, max: 110, ticks: { callback: v => v <= 100 ? v + "%" : "" }, grid: { color: "#f1f5f9" } },
+        x: { grid: { display: false }, ticks: { font: { weight: "800", size: 11, family: "'Barlow Condensed',sans-serif" } } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          const d = adhData[ctx.dataIndex];
+          return [`Aderência: ${ctx.raw.toFixed(2).replace(".", ",")}%`, `${d.ok} corretos / ${d.total} total`];
+        }}},
+        datalabels: {
+          display: true, anchor: "end", align: "top", color: "#002961",
+          font: { weight: "900", size: 12, family: "'Barlow Condensed',sans-serif" },
+          formatter: v => v.toFixed(1).replace(".", ",") + "%",
+          padding: { bottom: 4 }
+        }
+      },
+      animation: { duration: 700, easing: "easeOutQuart" }
+    }
+  });
+
+  // Summary chips
+  const aderenciaTableEl = $("aderenciaTable");
+  if (aderenciaTableEl) {
+    aderenciaTableEl.innerHTML = adhData.map(d => {
+      const color = d.adh >= 100 ? "#16a34a" : d.adh >= 50 ? "#1a56db" : "#dc2626";
+      const bg    = d.adh >= 100 ? "#d1fae5" : d.adh >= 50 ? "#dbeafe" : "#fee2e2";
+      return `<div onclick="setContFilter('${escH(d.cont)}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}33;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#374151;">${escH(d.cont)}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".", ",")}%</span>
+        <span style="font-size:11px;color:#64748b;font-weight:600;">${d.ok}/${d.total}</span>
+      </div>`;
+    }).join("");
+  }
+}
 function render(rows, label="CSV") {
   currentRows = rows;
   $("lastUpdate").textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")} · ${label}`;
@@ -1342,8 +1355,6 @@ $("roadmapFile").addEventListener("change", async e => {
 
 function updateDetChartFromRoadmap() {
   if (!ROADMAP_DATA.length) return;
-
-  // ── PROCV: Shipment (ROADMAP col G) ↔ ShipmentID (CSV) → LOCAL (col D) ──
   // 1. Total por LOCAL no ROADMAP (cada linha = 1 shipment)
   const localTotal = {};
   ROADMAP_DATA.forEach(r => {
