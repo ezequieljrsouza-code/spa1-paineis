@@ -379,7 +379,11 @@
       📤 Upload CSV
       <input type="file" id="csvFile" accept=".csv,text/csv" />
     </label>
-    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ PRINT</button>
+    <label class="nav-btn nav-btn-white" title="Faça upload do ROADMAP para cruzar Rota + LOCAL D no gráfico de Detalhamento">
+      🗺️ ROADMAP
+      <input type="file" id="roadmapFile" accept=".xlsx,.xls,.csv,text/csv" />
+    </label>
+    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ Print</button>
     <button class="nav-btn nav-btn-ghost" id="reloadBtn">🔄 Nuvem</button>
     <span class="status-chip" id="statusText">Aguardando dados…</span>
   </div>
@@ -389,7 +393,7 @@
       📤 Upload XLSX / CSV
       <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
-    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ PRINT</button>
+    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ Print</button>
     <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
   </div>
 </nav>
@@ -508,6 +512,17 @@
       </div>
       <canvas id="aderenciaChart" height="90" style="cursor:pointer"></canvas>
       <div id="aderenciaTable" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+
+    <!-- LOCAL D por Contenedor (ROADMAP PROCV) -->
+    <div class="chart-panel" id="localChartPanel" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap;">
+        <div class="chart-title" style="margin-bottom:0">📍 LOCAL por Contenedor</div>
+        <span class="chart-hint">PROCV: Contenedor → PREFIXO (col C) → LOCAL (col D) · ROADMAP</span>
+        <div id="localChartLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-left:auto;"></div>
+      </div>
+      <canvas id="localByContChart" height="110" style="cursor:pointer"></canvas>
+      <div id="localChartSummary" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
 
     <!-- TABLE -->
@@ -749,9 +764,11 @@
 
 <!-- ═══ SCRIPTS ══════════════════════════════════════════════════════ -->
 <script>
-const FIREBASE_URL    = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
-const FIREBASE_PS_URL = "https://reportinventario-default-rtdb.firebaseio.com/pos_sorting_spa1.json";
-const LS_TAB1 = "audit_spa1_v2";
+const FIREBASE_URL        = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
+const FIREBASE_PS_URL     = "https://reportinventario-default-rtdb.firebaseio.com/pos_sorting_spa1.json";
+const FIREBASE_ROADMAP_URL= "https://reportinventario-default-rtdb.firebaseio.com/roadmap_spa1.json";
+const LS_TAB1    = "audit_spa1_v2";
+const LS_ROADMAP = "roadmap_spa1_v1";
 
 let currentRows  = [];
 let activeChart  = null;
@@ -1028,12 +1045,47 @@ function renderDashboard(rows) {
         </div>`).join("")
     : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">Sem contenedores para exibir.</div>`;
 
-  // Aderência por destino — sorted DESCENDING by adh%
-  const adhData = conts.map(c => {
-    const t  = rows.filter(r=>r.contenedor===c).length;
-    const ok = rows.filter(r=>r.contenedor===c&&normalize(r.estado)==="correto").length;
-    return { cont:c, adh: t>0 ? Math.round((ok/t)*10000)/100 : 0 };
-  }).sort((a,b) => b.adh - a.adh).slice(0,15);
+  // Aderência por LOCAL (PROCV: Contenedor → PREFIXO → LOCAL do ROADMAP)
+  const LOCAL_ORDER = ["NEX","SVC","EMN1","EPA1","EPA2","EPA3",
+    "EPA4","EPA5","EPA6","EPA7","EPA8","EPA9","ETO4"];
+
+  // Build PREFIXO→LOCAL map from ROADMAP_DATA (if loaded)
+  const prefToLocal = {};
+  if (typeof ROADMAP_DATA !== "undefined") {
+    ROADMAP_DATA.forEach(r => {
+      const p = String(r.prefixo || "").trim();
+      const l = String(r.local   || "").trim();
+      // Normalize: strip "XPT - " prefix from LOCAL value too
+      const lNorm = l.replace(/^XPT\s*-\s*/i, "").trim();
+      if (p && lNorm && !prefToLocal[p]) prefToLocal[p] = lNorm;
+    });
+  }
+
+  // Group rows by LOCAL (via PREFIXO lookup, fallback to contenedor itself if it matches a LOCAL)
+  const localGroups = {};
+  LOCAL_ORDER.forEach(l => { localGroups[l] = { total: 0, ok: 0 }; });
+
+  rows.forEach(r => {
+    const cont  = String(r.contenedor || "").trim();
+    let   local = prefToLocal[cont] || (LOCAL_ORDER.includes(cont) ? cont : null);
+    if (!local) return;
+    if (!localGroups[local]) localGroups[local] = { total: 0, ok: 0 };
+    localGroups[local].total++;
+    if (normalize(r.estado) === "correto") localGroups[local].ok++;
+  });
+
+  // Only show locals that have data; if none (ROADMAP not loaded), fall back to per-contenedor
+  const adhLocals = LOCAL_ORDER
+    .map(l => ({ local: l, ...localGroups[l], adh: localGroups[l]?.total > 0 ? Math.round((localGroups[l].ok / localGroups[l].total) * 10000) / 100 : null }))
+    .filter(d => d.total > 0);
+
+  // Fallback: per-contenedor (original behavior) when no ROADMAP loaded
+  const adhData = adhLocals.length ? adhLocals.map(d => ({ cont: d.local, adh: d.adh, total: d.total, ok: d.ok }))
+    : conts.map(c => {
+        const t  = rows.filter(r=>r.contenedor===c).length;
+        const ok = rows.filter(r=>r.contenedor===c&&normalize(r.estado)==="correto").length;
+        return { cont:c, adh: t>0 ? Math.round((ok/t)*10000)/100 : 0, total:t, ok };
+      }).sort((a,b) => b.adh - a.adh).slice(0,15);
 
   const highlight = (d) => d.cont===fCont ? "#d97706" : d.adh>=90 ? "#002961" : d.adh>=50 ? "#1a56db" : "#60a5fa";
 
@@ -1059,11 +1111,14 @@ function renderDashboard(rows) {
       },
       scales: {
         y: { beginAtZero:true, max:110, ticks:{callback:v=>v<=100?v+"%":""}, grid:{color:"#f1f5f9"} },
-        x: { grid:{display:false} }
+        x: { grid:{display:false}, ticks:{ font:{ weight:"800", size:11, family:"'Barlow Condensed',sans-serif" } } }
       },
       plugins: {
         legend: { display:false },
-        tooltip: { callbacks:{ label:ctx=>`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%` } },
+        tooltip: { callbacks:{ label:ctx=>{
+          const d = adhData[ctx.dataIndex];
+          return [`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%`, `${d.ok} corretos / ${d.total} total`];
+        }}},
         datalabels: {
           display: true, anchor:"end", align:"top", color:"#002961",
           font:{ weight:"900", size:12, family:"'Barlow Condensed',sans-serif" },
@@ -1084,6 +1139,7 @@ function renderDashboard(rows) {
       return `<div onclick="setContFilter('${escH(d.cont)}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}22;">
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#374151;">${escH(d.cont)}</span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".",",")}%</span>
+        <span style="font-size:11px;color:#64748b;font-weight:600;">${d.ok}/${d.total}</span>
       </div>`;
     }).join("");
   }
@@ -1134,6 +1190,7 @@ function render(rows, label="CSV") {
   $("lastUpdate").textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")} · ${label}`;
   setStatus(`${fmt(rows.length)} registros · ${fmt([...new Set(rows.map(r=>r.contenedor).filter(Boolean))].length)} carrinhos`);
   renderDashboard(rows);
+  if (ROADMAP_DATA.length) updateDetChartFromRoadmap();
 }
 
 /* ── GENERIC TAB RENDER ─────────────────────────────── */
@@ -1195,6 +1252,236 @@ $("csvFile").addEventListener("change", async e => {
 });
 
 $("reloadBtn").addEventListener("click", loadFromFirebase);
+
+/* ── ROADMAP: save / load ───────────────────────────────────────── */
+function saveRoadmapLocal(rows) {
+  try { localStorage.setItem(LS_ROADMAP, JSON.stringify({ rows, ts: Date.now() })); } catch {}
+}
+
+async function saveRoadmapToFirebase(rows, fileName) {
+  try {
+    setStatus("Salvando ROADMAP na nuvem…");
+    const payload = { updatedAt: new Date().toISOString(), fileName, totalRows: rows.length, rows };
+    const res = await fetch(FIREBASE_ROADMAP_URL, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error("Firebase ROADMAP PUT failed");
+    setStatus("✅ ROADMAP salvo na nuvem: " + rows.length + " linhas.");
+  } catch(err) { console.warn("ROADMAP Firebase save:", err); }
+}
+
+async function loadRoadmapFromFirebase() {
+  try {
+    const res  = await fetch(FIREBASE_ROADMAP_URL);
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (data?.rows?.length) {
+      ROADMAP_DATA = data.rows;
+      saveRoadmapLocal(data.rows);
+      const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString("pt-BR") : "";
+      setStatus("ROADMAP nuvem: " + data.rows.length + " linhas" + (ts ? " · " + ts : ""));
+      updateDetChartFromRoadmap();
+      return true;
+    }
+  } catch(err) { console.warn("ROADMAP Firebase load:", err); }
+  return false;
+}
+
+function loadRoadmapLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_ROADMAP) || "null");
+    if (d?.rows?.length) { ROADMAP_DATA = d.rows; updateDetChartFromRoadmap(); return true; }
+  } catch {}
+  return false;
+}
+
+/* ── ROADMAP UPLOAD (join Rota + LOCAL D → Detalhamento chart) ── */
+let ROADMAP_DATA = []; // [{shipment, rota, prefixo, local}]
+
+$("roadmapFile").addEventListener("change", async e => {
+  const file = e.target.files[0]; if (!file) return;
+  setStatus("Lendo ROADMAP...");
+  try {
+    const ext = file.name.split(".").pop().toLowerCase();
+    let rows = [];
+    if (ext === "csv") {
+      const text = await file.text();
+      const { rows: parsed } = parseCSVGeneric(text);
+      rows = parsed.map(r => ({
+        shipment: (r["Shipment"] || r["ShipmentID"] || r["shipment"] || "").trim(),
+        rota:     (r["Rota"]    || r["rota"]     || "").trim(),
+        prefixo:  (r["PREFIXO"] || r["Prefixo"]  || r["prefixo"]  || "").trim(),
+        local:    (r["LOCAL"]   || r["Local"]    || r["local"]    || "").trim()
+      }));
+    } else {
+      const ab = await file.arrayBuffer();
+      const wb = XLSX.read(ab, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      if (!data.length) { setStatus("ROADMAP vazio."); return; }
+      const hdrs = data[0].map(h => String(h||"").trim());
+      const idxRota     = hdrs.findIndex(h => /^rota$/i.test(h));
+      const idxPrefixo  = hdrs.findIndex(h => /^prefixo$/i.test(h));
+      const idxLocal    = hdrs.findIndex(h => /^local$/i.test(h));
+      const idxShipment = hdrs.findIndex(h => /^shipment/i.test(h));
+      const iR = idxRota     >= 0 ? idxRota     : 1;
+      const iP = idxPrefixo  >= 0 ? idxPrefixo  : 2;
+      const iL = idxLocal    >= 0 ? idxLocal    : 3;
+      const iS = idxShipment >= 0 ? idxShipment : 6;
+      rows = data.slice(1).map(r => ({
+        shipment: String(r[iS] || "").trim(),
+        rota:     String(r[iR] || "").trim(),
+        prefixo:  String(r[iP] || "").trim(),
+        local:    String(r[iL] || "").trim()
+      })).filter(r => r.rota || r.local || r.prefixo);
+    }
+    ROADMAP_DATA = rows;
+    saveRoadmapLocal(rows);
+    updateDetChartFromRoadmap();
+    await saveRoadmapToFirebase(rows, file.name);
+  } catch(err) { console.error(err); setStatus("Erro ao ler ROADMAP."); }
+});
+
+function updateDetChartFromRoadmap() {
+  if (!ROADMAP_DATA.length) return;
+
+  // ── PROCV: Contenedor → PREFIXO (col C) → LOCAL (col D) ──────────
+  // Build lookup: PREFIXO → LOCAL (first non-empty LOCAL found per PREFIXO)
+  const prefixoToLocal = {};
+  ROADMAP_DATA.forEach(r => {
+    const p = String(r.prefixo || "").trim();
+    const l = String(r.local   || "").trim().replace(/^XPT\s*-\s*/i, "");
+    if (p && l && !prefixoToLocal[p]) prefixoToLocal[p] = l;
+  });
+
+  // Cross with currentRows: Contenedor (= PREFIXO) → LOCAL
+  // Count per LOCAL, and also track which contenedores map to each LOCAL
+  const localCnt     = {};   // local → count of packages
+  const localContMap = {};   // local → Set of contenedores
+
+  if (currentRows && currentRows.length) {
+    currentRows.forEach(row => {
+      const cont  = String(row.contenedor || "").trim();
+      const local = prefixoToLocal[cont];
+      if (local) {
+        localCnt[local]     = (localCnt[local]     || 0) + 1;
+        if (!localContMap[local]) localContMap[local] = new Set();
+        localContMap[local].add(cont);
+      }
+    });
+  }
+
+  // Fallback: if no rows loaded yet, count by PREFIXO occurrences in ROADMAP
+  if (!Object.keys(localCnt).length) {
+    ROADMAP_DATA.forEach(r => {
+      const l = String(r.local || "").trim();
+      if (l) localCnt[l] = (localCnt[l] || 0) + 1;
+    });
+  }
+
+  const sorted = Object.entries(localCnt).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) { setStatus("Nenhum LOCAL encontrado no cruzamento PREFIXO."); return; }
+
+  const COLORS = [
+    "#002961","#06418f","#1a56db","#3b82f6","#60a5fa","#93c5fd",
+    "#d97706","#f59e0b","#16a34a","#22c55e","#dc2626","#f87171",
+    "#7c3aed","#a78bfa","#0891b2","#22d3ee"
+  ];
+
+  // ── Gráfico LOCAL por Contenedor ──────────────────────────────────
+  const panel = $("localChartPanel");
+  if (panel) panel.style.display = "block";
+
+  if (window._localByContChart) window._localByContChart.destroy();
+  window._localByContChart = new Chart($("localByContChart"), {
+    type: "bar",
+    data: {
+      labels: sorted.map(([k]) => k),
+      datasets: [{
+        label: "Pacotes",
+        data:  sorted.map(([, v]) => v),
+        backgroundColor: sorted.map((_, i) => COLORS[i % COLORS.length]),
+        borderRadius: 10,
+        hoverBackgroundColor: "#002961"
+      }]
+    },
+    options: {
+      responsive: true,
+      layout: { padding: { top: 28 } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { color: "#64748b" } },
+        x: { grid: { display: false }, ticks: { font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" }, color: "#002961" } }
+      },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: true, anchor: "end", align: "top", color: "#002961",
+          font: { weight: "900", size: 12, family: "'Barlow Condensed',sans-serif" },
+          formatter: v => v
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const local = sorted[ctx.dataIndex][0];
+              const conts = localContMap[local] ? [...localContMap[local]].join(", ") : "—";
+              return [`${ctx.raw} pacotes`, `Contenedores: ${conts}`];
+            }
+          }
+        }
+      },
+      animation: { duration: 700, easing: "easeOutQuart" }
+    }
+  });
+
+  // ── Summary chips ──────────────────────────────────────────────────
+  const summary = $("localChartSummary");
+  if (summary) {
+    const total = sorted.reduce((a, [, v]) => a + v, 0);
+    summary.innerHTML = sorted.map(([local, cnt], i) => {
+      const pct   = total ? Math.round(cnt / total * 100) : 0;
+      const color = COLORS[i % COLORS.length];
+      const conts = localContMap[local] ? [...localContMap[local]].join(", ") : "";
+      return `<div title="Contenedores: ${conts}" style="display:flex;align-items:center;gap:6px;background:#f8fafc;border-radius:8px;padding:5px 11px;border:1.5px solid ${color}44;cursor:default;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0;"></span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#374151;">${escH(local)}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${cnt}</span>
+        <span style="font-size:11px;color:#94a3b8;font-weight:700;">${pct}%</span>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Also update psDetChart (Detalhamento por Localização no Tab 2) ─
+  if (psStaticDetChart) psStaticDetChart.destroy();
+  psStaticDetChart = new Chart($("psDetChart"), {
+    type: "bar",
+    data: {
+      labels: sorted.map(([k]) => k),
+      datasets: [{
+        data: sorted.map(([, v]) => v),
+        backgroundColor: sorted.map((_, i) => COLORS[i % COLORS.length]),
+        borderRadius: 8
+      }]
+    },
+    options: {
+      indexAxis: "y", responsive: true,
+      scales: {
+        x: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { color: "#64748b" } },
+        y: { grid: { display: false }, ticks: { font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" }, color: "#002961" } }
+      },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: true, anchor: "end", align: "right", color: "#002961",
+          font: { weight: "900", size: 13, family: "'Barlow Condensed',sans-serif" },
+          formatter: v => v
+        },
+        tooltip: { callbacks: { label: ctx => ctx.raw + " pacotes" } }
+      },
+      animation: { duration: 700, easing: "easeOutQuart" }
+    }
+  });
+
+  const total = sorted.reduce((a, [, v]) => a + v, 0);
+  setStatus("LOCAL D atualizado: " + sorted.length + " locais, " + total + " pacotes (PROCV PREFIXO)");
+}
 
 $("printBtn").addEventListener("click", async () => {
   try {
@@ -1812,6 +2099,11 @@ drawGauge(0);
 
 // Load tab1 — local first, then Firebase
 if (!loadLocal()) loadFromFirebase();
+
+// Load ROADMAP — localStorage first, then Firebase
+if (!loadRoadmapLocal()) {
+  loadRoadmapFromFirebase();
+}
 
 // Restore Pós Sorting
 try {
