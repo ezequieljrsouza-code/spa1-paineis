@@ -508,7 +508,7 @@
     <div class="chart-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap;">
         <div class="chart-title" style="margin-bottom:0">Aderência por Destino</div>
-        <span class="chart-hint">clique numa barra para filtrar por contenedor</span>
+        <span class="chart-hint">agrupado por ilha · clique para filtrar</span>
         <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;">
           <button id="adhFilterAll"    onclick="setAdhFilter('all')"     style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #002961;background:#002961;color:#fff;cursor:pointer;transition:.2s">Todos</button>
           <button id="adhFilterBelow" onclick="setAdhFilter('below')"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #dc2626;background:#fff;color:#dc2626;cursor:pointer;transition:.2s">&#60; 100%</button>
@@ -784,6 +784,7 @@ let psPontoChart = null;
 let fEstado = "all";
 let fTurno  = "all";
 let fCont   = null;
+let fIlha   = null;
 let fRep    = null;
 let fSearch = "";
 let rankExpanded = false;
@@ -824,6 +825,7 @@ function getFiltered() {
     if (fEstado !== "all" && normalize(r.estado) !== fEstado) return false;
     if (fTurno  !== "all" && classifyTurno(r.contenedor)  !== fTurno) return false;
     if (fCont   && r.contenedor !== fCont) return false;
+    if (fIlha   && String(r.contenedor||"").charAt(0).toUpperCase() !== fIlha) return false;
     if (fRep    && r.repAuditoria !== fRep) return false;
     if (lq) {
       // Search across all known fields
@@ -884,7 +886,7 @@ function clearCont() {
 }
 
 function resetFilters() {
-  fEstado = "all"; fTurno = "all"; fCont = null; fRep = null; fSearch = "";
+  fEstado = "all"; fTurno = "all"; fCont = null; fIlha = null; fRep = null; fSearch = "";
   $("filterEstado").value = "all";
   document.querySelectorAll("#turnoChips .filter-chip").forEach(c => c.classList.remove("active"));
   document.querySelector("[data-turno='all']").classList.add("active");
@@ -1050,14 +1052,23 @@ function renderDashboard(rows) {
         </div>`).join("")
     : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">Sem contenedores para exibir.</div>`;
 
-  // ── Aderência por Contenedor ─────────────────────────────────────
-  // Build per-contenedor data
-  const adhRaw = conts.map(c => {
-    const t  = rows.filter(r => r.contenedor === c).length;
-    const ok = rows.filter(r => r.contenedor === c && normalize(r.estado) === "correto").length;
-    return { cont: c, adh: t > 0 ? Math.round((ok / t) * 10000) / 100 : 0, total: t, ok };
+  // ── Aderência por Ilha (inicial do Contenedor) ───────────────────
+  const ilhaMap = {};
+  rows.forEach(r => {
+    const ilha = String(r.contenedor || "").trim().charAt(0).toUpperCase();
+    if (!ilha) return;
+    if (!ilhaMap[ilha]) ilhaMap[ilha] = { total: 0, ok: 0 };
+    ilhaMap[ilha].total++;
+    if (normalize(r.estado) === "correto") ilhaMap[ilha].ok++;
   });
-  // Sort: <100% descending first, then =100% alphabetically
+
+  const adhRaw = Object.entries(ilhaMap).map(([ilha, d]) => ({
+    cont:  ilha,
+    total: d.total,
+    ok:    d.ok,
+    adh:   d.total > 0 ? Math.round((d.ok / d.total) * 10000) / 100 : 0
+  }));
+  // Sort: <100% descending first, then =100%
   adhRaw.sort((a, b) => {
     const aFull = a.adh >= 100, bFull = b.adh >= 100;
     if (aFull !== bFull) return aFull ? 1 : -1;
@@ -1139,7 +1150,7 @@ function renderAderenciaChart(adhRaw, rows, fCont) {
   );
 
   const highlight = d =>
-    d.cont === fCont ? "#d97706" :
+    d.cont === fIlha ? "#d97706" :
     d.adh >= 100     ? "#16a34a" :
     d.adh >= 50      ? "#1a56db" : "#dc2626";
 
@@ -1161,7 +1172,9 @@ function renderAderenciaChart(adhRaw, rows, fCont) {
       layout: { padding: { top: 28 } },
       onClick: (_, els) => {
         if (!els.length) return;
-        setContFilter(adhData[els[0].index].cont);
+        const ilha = adhData[els[0].index].cont;
+        if (fIlha === ilha) { fIlha = null; } else { fIlha = ilha; }
+        renderDashboard(getFiltered());
       },
       scales: {
         y: { beginAtZero: true, max: 110, ticks: { callback: v => v <= 100 ? v + "%" : "" }, grid: { color: "#f1f5f9" } },
@@ -1190,8 +1203,8 @@ function renderAderenciaChart(adhRaw, rows, fCont) {
     aderenciaTableEl.innerHTML = adhData.map(d => {
       const color = d.adh >= 100 ? "#16a34a" : d.adh >= 50 ? "#1a56db" : "#dc2626";
       const bg    = d.adh >= 100 ? "#d1fae5" : d.adh >= 50 ? "#dbeafe" : "#fee2e2";
-      return `<div onclick="setContFilter('${escH(d.cont)}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}33;">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#374151;">${escH(d.cont)}</span>
+      return `<div onclick="fIlha=fIlha===this.dataset.ilha?null:this.dataset.ilha;renderDashboard(getFiltered())" data-ilha="${escH(d.cont)}" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}33;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#374151;">Ilha ${escH(d.cont)}</span>
         <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".", ",")}%</span>
         <span style="font-size:11px;color:#64748b;font-weight:600;">${d.ok}/${d.total}</span>
       </div>`;
