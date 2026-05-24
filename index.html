@@ -1343,69 +1343,78 @@ $("roadmapFile").addEventListener("change", async e => {
 function updateDetChartFromRoadmap() {
   if (!ROADMAP_DATA.length) return;
 
-  // ── PROCV: Contenedor → PREFIXO (col C) → LOCAL (col D) ──────────
-  // Build lookup: PREFIXO → LOCAL (first non-empty LOCAL found per PREFIXO)
-  const prefixoToLocal = {};
+  // ── PROCV: Shipment (ROADMAP col G) ↔ ShipmentID (CSV) → LOCAL (col D) ──
+  // 1. Total por LOCAL no ROADMAP (cada linha = 1 shipment)
+  const localTotal = {};
   ROADMAP_DATA.forEach(r => {
-    const p = String(r.prefixo || "").trim();
-    const l = String(r.local   || "").trim().replace(/^XPT\s*-\s*/i, "");
-    if (p && l && !prefixoToLocal[p]) prefixoToLocal[p] = l;
+    const l = String(r.local || "").trim().replace(/^XPT\s*-\s*/i, "");
+    if (l) localTotal[l] = (localTotal[l] || 0) + 1;
   });
 
-  // Cross with currentRows: Contenedor (= PREFIXO) → LOCAL
-  // Count per LOCAL, and also track which contenedores map to each LOCAL
-  const localCnt     = {};   // local → count of packages
-  const localContMap = {};   // local → Set of contenedores
+  // 2. Build Shipment → LOCAL lookup
+  const shipToLocal = {};
+  ROADMAP_DATA.forEach(r => {
+    const s = String(r.shipment || "").trim();
+    const l = String(r.local    || "").trim().replace(/^XPT\s*-\s*/i, "");
+    if (s && l) shipToLocal[s] = l;
+  });
 
+  // 3. Count auditados por LOCAL (CSV rows matched by ShipmentID)
+  const localAuditado = {};
   if (currentRows && currentRows.length) {
     currentRows.forEach(row => {
-      const cont  = String(row.contenedor || "").trim();
-      const local = prefixoToLocal[cont];
-      if (local) {
-        localCnt[local]     = (localCnt[local]     || 0) + 1;
-        if (!localContMap[local]) localContMap[local] = new Set();
-        localContMap[local].add(cont);
-      }
+      const sid   = String(row.shipmentId || row["shipment id"] || row["shipment_id"] || "").trim();
+      const local = shipToLocal[sid];
+      if (local) localAuditado[local] = (localAuditado[local] || 0) + 1;
     });
   }
 
-  // Fallback: if no rows loaded yet, count by PREFIXO occurrences in ROADMAP
-  if (!Object.keys(localCnt).length) {
-    ROADMAP_DATA.forEach(r => {
-      const l = String(r.local || "").trim();
-      if (l) localCnt[l] = (localCnt[l] || 0) + 1;
-    });
-  }
+  // 4. Faltante = total ROADMAP − auditado CSV
+  const LOCAL_ORDER = ["NEX","SVC","EMN1","EPA1","EPA2","EPA3","EPA4","EPA5","EPA6","EPA7","EPA8","EPA9","ETO4"];
+  const faltanteData = LOCAL_ORDER
+    .filter(l => localTotal[l] > 0)
+    .map(l => ({
+      local:     l,
+      total:     localTotal[l]     || 0,
+      auditado:  localAuditado[l]  || 0,
+      faltante:  Math.max(0, (localTotal[l] || 0) - (localAuditado[l] || 0))
+    }))
+    .sort((a, b) => b.faltante - a.faltante);
 
-  const sorted = Object.entries(localCnt).sort((a, b) => b[1] - a[1]);
-  if (!sorted.length) { setStatus("Nenhum LOCAL encontrado no cruzamento PREFIXO."); return; }
+  if (!faltanteData.length) { setStatus("Nenhum LOCAL encontrado no ROADMAP."); return; }
 
   const COLORS = [
-    "#002961","#06418f","#1a56db","#3b82f6","#60a5fa","#93c5fd",
-    "#d97706","#f59e0b","#16a34a","#22c55e","#dc2626","#f87171",
-    "#7c3aed","#a78bfa","#0891b2","#22d3ee"
+    "#dc2626","#ef4444","#f87171","#fb923c",
+    "#f59e0b","#d97706","#1a56db","#3b82f6",
+    "#002961","#06418f","#7c3aed","#16a34a","#0891b2"
   ];
 
-  // ── Gráfico LOCAL por Contenedor ──────────────────────────────────
+  // ── Gráfico LOCAL — Faltante ──────────────────────────────────────
   const panel = $("localChartPanel");
   if (panel) panel.style.display = "block";
+
+  // Update panel title
+  const titleEl = panel?.querySelector(".chart-title");
+  if (titleEl) titleEl.textContent = "📦 Faltantes por LOCAL";
+  const hintEl = panel?.querySelector(".chart-hint");
+  if (hintEl) hintEl.textContent = "PROCV: Shipment (ROADMAP) × ShipmentID (CSV) → pendentes por LOCAL";
 
   if (window._localByContChart) window._localByContChart.destroy();
   window._localByContChart = new Chart($("localByContChart"), {
     type: "bar",
     data: {
-      labels: sorted.map(([k]) => k),
+      labels: faltanteData.map(d => d.local),
       datasets: [{
-        label: "Pacotes",
-        data:  sorted.map(([, v]) => v),
-        backgroundColor: sorted.map((_, i) => COLORS[i % COLORS.length]),
+        label: "Faltantes",
+        data:  faltanteData.map(d => d.faltante),
+        backgroundColor: faltanteData.map((_, i) => COLORS[i % COLORS.length]),
         borderRadius: 10,
         hoverBackgroundColor: "#002961"
       }]
     },
     options: {
       responsive: true,
-      layout: { padding: { top: 28 } },
+      layout: { padding: { top: 32 } },
       scales: {
         y: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { color: "#64748b" } },
         x: { grid: { display: false }, ticks: { font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" }, color: "#002961" } }
@@ -1414,15 +1423,20 @@ function updateDetChartFromRoadmap() {
         legend: { display: false },
         datalabels: {
           display: true, anchor: "end", align: "top", color: "#002961",
-          font: { weight: "900", size: 12, family: "'Barlow Condensed',sans-serif" },
-          formatter: v => v
+          font: { weight: "900", size: 13, family: "'Barlow Condensed',sans-serif" },
+          formatter: v => v.toLocaleString("pt-BR")
         },
         tooltip: {
           callbacks: {
             label: ctx => {
-              const local = sorted[ctx.dataIndex][0];
-              const conts = localContMap[local] ? [...localContMap[local]].join(", ") : "—";
-              return [`${ctx.raw} pacotes`, `Contenedores: ${conts}`];
+              const d = faltanteData[ctx.dataIndex];
+              const pct = d.total > 0 ? ((d.faltante / d.total) * 100).toFixed(1) : "0.0";
+              return [
+                `Faltantes: ${d.faltante.toLocaleString("pt-BR")}`,
+                `Auditados: ${d.auditado.toLocaleString("pt-BR")}`,
+                `Total ROADMAP: ${d.total.toLocaleString("pt-BR")}`,
+                `Pendente: ${pct}%`
+              ];
             }
           }
         }
@@ -1434,29 +1448,30 @@ function updateDetChartFromRoadmap() {
   // ── Summary chips ──────────────────────────────────────────────────
   const summary = $("localChartSummary");
   if (summary) {
-    const total = sorted.reduce((a, [, v]) => a + v, 0);
-    summary.innerHTML = sorted.map(([local, cnt], i) => {
-      const pct   = total ? Math.round(cnt / total * 100) : 0;
+    summary.innerHTML = faltanteData.map((d, i) => {
+      const pct   = d.total > 0 ? Math.round(d.faltante / d.total * 100) : 0;
       const color = COLORS[i % COLORS.length];
-      const conts = localContMap[local] ? [...localContMap[local]].join(", ") : "";
-      return `<div title="Contenedores: ${conts}" style="display:flex;align-items:center;gap:6px;background:#f8fafc;border-radius:8px;padding:5px 11px;border:1.5px solid ${color}44;cursor:default;">
+      const bgClr = pct >= 80 ? "#fee2e2" : pct >= 40 ? "#fef3c7" : "#d1fae5";
+      return `<div title="Auditados: ${d.auditado} / Total: ${d.total}" style="display:flex;align-items:center;gap:6px;background:${bgClr};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}55;cursor:default;">
         <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0;"></span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#374151;">${escH(local)}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${cnt}</span>
-        <span style="font-size:11px;color:#94a3b8;font-weight:700;">${pct}%</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#374151;">${escH(d.local)}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:${color};">${d.faltante.toLocaleString("pt-BR")}</span>
+        <span style="font-size:11px;color:#64748b;font-weight:700;">${pct}% pend.</span>
       </div>`;
     }).join("");
   }
 
   // ── Also update psDetChart (Detalhamento por Localização no Tab 2) ─
+  const COLORS2 = ["#002961","#06418f","#1a56db","#3b82f6","#60a5fa","#93c5fd",
+                   "#d97706","#f59e0b","#16a34a","#22c55e","#dc2626","#f87171","#7c3aed"];
   if (psStaticDetChart) psStaticDetChart.destroy();
   psStaticDetChart = new Chart($("psDetChart"), {
     type: "bar",
     data: {
-      labels: sorted.map(([k]) => k),
+      labels: faltanteData.map(d => d.local),
       datasets: [{
-        data: sorted.map(([, v]) => v),
-        backgroundColor: sorted.map((_, i) => COLORS[i % COLORS.length]),
+        data: faltanteData.map(d => d.faltante),
+        backgroundColor: faltanteData.map((_, i) => COLORS2[i % COLORS2.length]),
         borderRadius: 8
       }]
     },
@@ -1471,16 +1486,18 @@ function updateDetChartFromRoadmap() {
         datalabels: {
           display: true, anchor: "end", align: "right", color: "#002961",
           font: { weight: "900", size: 13, family: "'Barlow Condensed',sans-serif" },
-          formatter: v => v
+          formatter: v => v.toLocaleString("pt-BR")
         },
-        tooltip: { callbacks: { label: ctx => ctx.raw + " pacotes" } }
+        tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString("pt-BR") + " faltantes" } }
       },
       animation: { duration: 700, easing: "easeOutQuart" }
     }
   });
 
-  const total = sorted.reduce((a, [, v]) => a + v, 0);
-  setStatus("LOCAL D atualizado: " + sorted.length + " locais, " + total + " pacotes (PROCV PREFIXO)");
+  const totalFalt = faltanteData.reduce((a, d) => a + d.faltante, 0);
+  const totalAud  = faltanteData.reduce((a, d) => a + d.auditado, 0);
+  const totalRoad = faltanteData.reduce((a, d) => a + d.total, 0);
+  setStatus(`Faltantes: ${totalFalt.toLocaleString("pt-BR")} · Auditados: ${totalAud.toLocaleString("pt-BR")} · ROADMAP: ${totalRoad.toLocaleString("pt-BR")}`);
 }
 
 $("printBtn").addEventListener("click", async () => {
