@@ -383,7 +383,7 @@
       🗺️ ROADMAP
       <input type="file" id="roadmapFile" accept=".xlsx,.xls,.csv,text/csv" />
     </label>
-    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ PRINT</button>
+    <button class="nav-btn nav-btn-blue"  id="printBtn">PRINT 🖼️</button>
     <button class="nav-btn nav-btn-ghost" id="reloadBtn">🔄 Nuvem</button>
     <span class="status-chip" id="statusText">Aguardando dados…</span>
   </div>
@@ -393,7 +393,8 @@
       📤 Upload XLSX / CSV
       <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
-    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ PRINT</button>
+    <button class="nav-btn nav-btn-blue" id="printBtn2">PRINT 🖼️</button>
+    <button class="nav-btn nav-btn-ghost" onclick="loadPsFromFirebase()">🔄 Nuvem</button>
     <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
   </div>
 </nav>
@@ -1263,6 +1264,21 @@ async function loadFromFirebase() {
   } catch { setStatus("Não foi possível carregar da nuvem."); loadLocal(); }
 }
 
+async function loadPsFromFirebase() {
+  try {
+    const res  = await fetch(FIREBASE_PS_URL);
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data?.rows?.length) return false;
+    // Save to localStorage for next time
+    try { localStorage.setItem("ps_data", JSON.stringify({ rows: data.rows, headers: data.headers || [] })); } catch {}
+    renderPosSorting(data.rows, data.headers || []);
+    const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString("pt-BR") : "";
+    $("status2").textContent = `✅ ${fmt(data.rows.length)} registros · nuvem${ts ? " · " + ts : ""}`;
+    return true;
+  } catch(err) { console.warn("PS Firebase load:", err); return false; }
+}
+
 /* ── EVENTS: TAB 1 ──────────────────────────────────── */
 $("csvFile").addEventListener("change", async e => {
   const file = e.target.files[0]; if (!file) return;
@@ -1539,7 +1555,7 @@ $("printBtn").addEventListener("click", async () => {
       height: target.scrollHeight
     });
     const link = document.createElement("a");
-    link.download = `auditoria-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
+    link.PRINT 🖼️ = `auditoria-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
     setStatus("✅ Imagem 4K salva!");
@@ -1564,7 +1580,7 @@ $("printBtn2").addEventListener("click", async () => {
       height: target.scrollHeight
     });
     const link = document.createElement("a");
-    link.download = `pos-sorting-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
+    link.PRINT 🖼️ = `pos-sorting-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
     btn.textContent = "✅ 4K Salvo!";
@@ -2146,14 +2162,16 @@ if (!loadRoadmapLocal()) {
   loadRoadmapFromFirebase();
 }
 
-// Restore Pós Sorting
+// Restore Pós Sorting — localStorage first, then Firebase
 try {
   const ps = JSON.parse(localStorage.getItem("ps_data")||"null");
   if (ps?.rows?.length) {
     renderPosSorting(ps.rows, ps.headers||[]);
     $("status2").textContent = `✅ ${fmt(ps.rows.length)} registros (salvo)`;
+  } else {
+    loadPsFromFirebase();
   }
-} catch {}
+} catch { loadPsFromFirebase(); }
 
 // Restore generic tabs
 [3,4].forEach(num => {
