@@ -383,7 +383,7 @@
       🗺️ ROADMAP
       <input type="file" id="roadmapFile" accept=".xlsx,.xls,.csv,text/csv" />
     </label>
-    <button class="nav-btn nav-btn-blue"  id="printBtn">PRINT 🖼️</button>
+    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ PRINT</button>
     <button class="nav-btn nav-btn-ghost" id="reloadBtn">🔄 Nuvem</button>
     <span class="status-chip" id="statusText">Aguardando dados…</span>
   </div>
@@ -393,7 +393,7 @@
       📤 Upload XLSX / CSV
       <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
-    <button class="nav-btn nav-btn-blue" id="printBtn2">PRINT 🖼️</button>
+    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ PRINT</button>
     <button class="nav-btn nav-btn-ghost" onclick="loadPsFromFirebase()">🔄 Nuvem</button>
     <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
   </div>
@@ -610,35 +610,35 @@
     <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;margin-bottom:14px;">
       <!-- Gauge card -->
       <div class="chart-panel" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
-        <div class="chart-title" style="display:block;text-align:center;width:100%;margin-bottom:10px;">📦 Pendentes Geral</div>
+        <div class="chart-title" style="display:block;text-align:center;width:100%;margin-bottom:10px;font-size:18px;">📦 Pendentes Geral</div>
         <canvas id="ps2GaugeCanvas" width="300" height="165"></canvas>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:10px;">
-          <div style="text-align:center;background:var(--bg);border-radius:10px;padding:8px;">
-            <div style="font-size:10px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Caminho Estação</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--orange)">226</div>
+          <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;">
+            <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Caminho Estação</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--orange)">226</div>
           </div>
-          <div style="text-align:center;background:var(--bg);border-radius:10px;padding:8px;">
-            <div style="font-size:10px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Na Estação</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--green)">88</div>
+          <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;">
+            <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Na Estação</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--green)">88</div>
           </div>
         </div>
       </div>
       <!-- Detalhamento horizontal bar chart -->
       <div class="chart-panel" style="margin-bottom:0;">
-        <div class="chart-title" style="display:block;text-align:center;width:100%">📊 Detalhamento por Localização</div>
+        <div class="chart-title" style="display:block;text-align:center;width:100%;font-size:18px;">📊 Detalhamento por Localização</div>
         <canvas id="psDetChart" height="100"></canvas>
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-          <div style="text-align:center;background:#eff6ff;border-radius:10px;padding:10px;border:1.5px solid #bfdbfe;">
-            <div style="font-size:10px;font-weight:800;color:var(--primary);text-transform:uppercase;margin-bottom:2px">Turno AM</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--primary)">314</div>
+          <div style="text-align:center;background:#eff6ff;border-radius:10px;padding:12px;border:1.5px solid #bfdbfe;">
+            <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;margin-bottom:4px">Turno AM</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--primary)">314</div>
           </div>
-          <div style="text-align:center;background:#f0fdf4;border-radius:10px;padding:10px;border:1.5px solid #bbf7d0;">
-            <div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:2px">Volumosos</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">2</div>
+          <div style="text-align:center;background:#f0fdf4;border-radius:10px;padding:12px;border:1.5px solid #bbf7d0;">
+            <div style="font-size:13px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:4px">Volumosos</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--green)">2</div>
           </div>
-          <div style="text-align:center;background:#fefce8;border-radius:10px;padding:10px;border:1.5px solid #fde68a;">
-            <div style="font-size:10px;font-weight:800;color:var(--orange);text-transform:uppercase;margin-bottom:2px">Sugeridos</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--orange)">1</div>
+          <div style="text-align:center;background:#fefce8;border-radius:10px;padding:12px;border:1.5px solid #fde68a;">
+            <div style="font-size:13px;font-weight:800;color:var(--orange);text-transform:uppercase;margin-bottom:4px">Sugeridos</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--orange)">1</div>
           </div>
         </div>
       </div>
@@ -646,31 +646,31 @@
 
     <!-- PENDENTES POR ILHA (Ponto) -->
     <div class="chart-panel" style="margin-bottom:14px;">
-      <div class="chart-title">🏝️ Pendentes por Ilha</div>
+      <div class="chart-title" style="font-size:18px;">🏝️ Pendentes por Ilha</div>
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;min-width:400px;">
           <thead>
             <tr id="psIlhaHeader" style="background:var(--primary);">
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">A</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">B</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">D</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">F</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">J</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">K</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">M</th>
-              <th style="color:#fff;padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">P</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">A</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">B</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">D</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">F</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">J</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">K</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">M</th>
+              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">P</th>
             </tr>
           </thead>
           <tbody>
             <tr id="psIlhaRow">
-              <td id="ilhaCell_A" style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#dc2626;color:#fff;border-radius:0;">287</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#1a56db;color:#fff;">21</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td id="ilhaCell_A" style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#dc2626;color:#fff;border-radius:0;">287</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#1a56db;color:#fff;">21</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
             </tr>
           </tbody>
         </table>
@@ -680,11 +680,11 @@
     <!-- 2 charts: top rotas + distribuição por ponto -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" id="ps2CaptureArea">
       <div class="chart-panel" style="margin-bottom:0">
-        <div class="chart-title">📍 Faltantes por Rota (Top 15)</div>
+        <div class="chart-title" style="font-size:18px;">📍 Faltantes por Rota (Top 15)</div>
         <canvas id="psRotaChart" height="160"></canvas>
       </div>
       <div class="chart-panel" style="margin-bottom:0">
-        <div class="chart-title">🏝️ Distribuição por Ponto</div>
+        <div class="chart-title" style="font-size:18px;">🏝️ Distribuição por Ponto</div>
         <canvas id="psPontoChart" height="160"></canvas>
         <div id="psPontoLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
       </div>
@@ -1555,7 +1555,7 @@ $("printBtn").addEventListener("click", async () => {
       height: target.scrollHeight
     });
     const link = document.createElement("a");
-    link.PRINT 🖼️ = `auditoria-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
+    link.download = `auditoria-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
     setStatus("✅ Imagem 4K salva!");
@@ -1580,7 +1580,7 @@ $("printBtn2").addEventListener("click", async () => {
       height: target.scrollHeight
     });
     const link = document.createElement("a");
-    link.PRINT 🖼️ = `pos-sorting-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
+    link.download = `pos-sorting-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
     btn.textContent = "✅ 4K Salvo!";
@@ -2007,11 +2007,11 @@ function initPsStatic() {
         const label = psStaticRotaChart.data.labels[els[0].index];
         psApplyFilter("rota", label);
       },
-      scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:11}}}},
+      scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:14,weight:"700"}}}},
       plugins:{legend:{display:false},
         tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"top",color:"#002961",
-          font:{weight:"900",size:11,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}},
+          font:{weight:"900",size:14,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}},
       animation:{duration:700,easing:"easeOutQuart"}
     }
   });
@@ -2043,15 +2043,15 @@ function initPsStatic() {
       },
       layout: { padding: { right: 60 } },
       scales: {
-        x: { beginAtZero:true, grid:{color:"#f1f5f9"}, ticks:{color:"#64748b"} },
-        y: { grid:{display:false}, ticks:{font:{weight:"800",size:13,family:"'Barlow Condensed',sans-serif"},color:"#002961"} }
+        x: { beginAtZero:true, grid:{color:"#f1f5f9"}, ticks:{color:"#64748b",font:{size:13}} },
+        y: { grid:{display:false}, ticks:{font:{weight:"800",size:16,family:"'Barlow Condensed',sans-serif"},color:"#002961"} }
       },
       plugins: {
         legend: { display:false },
         datalabels: {
           display: true, anchor:"end", align:"right",
           color: ctx => ctx.dataIndex===PS_PONTO_DATA.indexOf(Math.max(...PS_PONTO_DATA))?"#dc2626":"#002961",
-          font: { weight:"900", size:13, family:"'Barlow Condensed',sans-serif" },
+          font: { weight:"900", size:16, family:"'Barlow Condensed',sans-serif" },
           formatter: (v) => `${v}  (${Math.round(v/pontoTotal*100)}%)`
         },
         tooltip: { callbacks:{ label:ctx=>`${ctx.raw} pacotes · ${Math.round(ctx.raw/pontoTotal*100)}%` } }
@@ -2066,7 +2066,7 @@ function initPsStatic() {
       const bg = PS_PONTO_DATA[i]===Math.max(...PS_PONTO_DATA)?"#dc2626":(pColors[i]||"#1a56db");
       return `<div style="display:flex;align-items:center;gap:5px;background:${bg}18;border:1.5px solid ${bg}44;border-radius:7px;padding:3px 10px;">
         <span style="width:10px;height:10px;border-radius:50%;background:${bg};display:inline-block"></span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${bg}">Ilha ${escH(lbl)}: ${PS_PONTO_DATA[i]}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${bg}">Ilha ${escH(lbl)}: ${PS_PONTO_DATA[i]}</span>
       </div>`;
     }).join("");
   }
