@@ -362,6 +362,93 @@
       .top-nav, .filter-bar { display: none; }
       body { background: #fff; }
     }
+
+    /* ═══ PÓS SORTING — NOVO VISUAL ═══════════════════ */
+    .ps2-header {
+      background: linear-gradient(120deg, #001a45 0%, var(--primary) 45%, #0a3d8f 100%);
+      border-radius: 18px; padding: 18px 26px; margin-bottom: 16px;
+      box-shadow: 0 14px 40px rgba(0,41,97,.28);
+      position: relative; overflow: hidden; text-align: center;
+    }
+    .ps2-header::before {
+      content: ""; position: absolute; left: -40px; bottom: -60px;
+      width: 180px; height: 180px; background: rgba(255,255,255,.05); border-radius: 50%;
+    }
+    .ps2-header::after {
+      content: ""; position: absolute; right: -50px; top: -70px;
+      width: 220px; height: 220px; background: rgba(96,165,250,.12); border-radius: 50%;
+    }
+    .ps2-header-title {
+      font-family: 'Barlow Condensed', sans-serif; position: relative; z-index: 1;
+      font-size: clamp(20px, 2.6vw, 32px); font-weight: 900; color: #fff;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .ps2-header-sub {
+      position: relative; z-index: 1; color: rgba(255,255,255,.65);
+      font-size: 12px; font-weight: 600; margin-top: 4px; letter-spacing: .04em;
+    }
+
+    .ps2-kpi-grid > div {
+      background: linear-gradient(165deg, #ffffff 0%, #f7f9fd 100%);
+      border-radius: 16px !important; border: none !important;
+      box-shadow: 0 6px 20px rgba(0,41,97,.09), inset 0 1px 0 rgba(255,255,255,.6);
+      padding: 16px !important; position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .ps2-kpi-grid > div:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 30px rgba(0,41,97,.16), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .ps2-kpi-grid > div::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--accent-color, var(--primary));
+    }
+
+    .ps2-panel {
+      background: linear-gradient(165deg, #ffffff 0%, #fafbfd 100%);
+      border-radius: 18px !important; border: none !important;
+      box-shadow: 0 8px 28px rgba(0,41,97,.10), inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .ps2-panel .chart-title {
+      background: linear-gradient(120deg, var(--primary) 0%, var(--primary2) 100%);
+      border-radius: 10px; box-shadow: 0 4px 12px rgba(0,41,97,.25);
+    }
+    .ps2-stat {
+      border-radius: 14px !important; position: relative; overflow: hidden;
+      transition: transform .18s;
+    }
+    .ps2-stat:hover { transform: translateY(-2px); }
+
+    .ps2-ilha-table thead tr { background: transparent !important; }
+    .ps2-ilha-table th { background: linear-gradient(120deg, var(--primary) 0%, var(--primary2) 100%) !important; border-radius:10px; }
+    .ps2-ilha-table td { border-radius: 10px !important; box-shadow: 0 3px 10px rgba(0,0,0,.12); }
+    .ps2-ilha-table td + td { margin-left: 2px; }
+
+    /* ═══ RESPONSIVE ════════════════════════════ */
+    /* Pós Sorting panel — responsive grid system */
+    .ps2-kpi-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:14px; }
+    .ps2-top-grid    { display:grid; grid-template-columns:minmax(260px,340px) 1fr; gap:14px; margin-bottom:14px; }
+    .ps2-sub-kpi     { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; margin-top:10px; }
+    .ps2-sub-kpi-3   { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px; }
+    .ps2-charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    .ps2-ilha-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .ps2-ilha-table  { width:100%; border-collapse:separate; border-spacing:6px; min-width:480px; }
+
+    @media (max-width: 1100px) {
+      .ps2-top-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .ps2-charts-grid { grid-template-columns: 1fr; }
+      .ps2-sub-kpi-3   { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .ps2-kpi-grid    { grid-template-columns: 1fr 1fr; }
+      .ps2-sub-kpi     { grid-template-columns: 1fr; }
+      .ps2-sub-kpi-3   { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
+      .ps2-kpi-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -379,11 +466,7 @@
       📤 Upload CSV
       <input type="file" id="csvFile" accept=".csv,text/csv" />
     </label>
-    <label class="nav-btn nav-btn-white" title="Faça upload do ROADMAP para cruzar Rota + LOCAL D no gráfico de Detalhamento">
-      🗺️ ROADMAP
-      <input type="file" id="roadmapFile" accept=".xlsx,.xls,.csv,text/csv" />
-    </label>
-    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ PRINT</button>
+    <button class="nav-btn nav-btn-blue"  id="printBtn">🖼️ Print HD</button>
     <button class="nav-btn nav-btn-ghost" id="reloadBtn">🔄 Nuvem</button>
     <span class="status-chip" id="statusText">Aguardando dados…</span>
   </div>
@@ -393,8 +476,7 @@
       📤 Upload XLSX / CSV
       <input type="file" id="csvFile2" accept=".xlsx,.xls,.csv,text/csv" style="display:none" />
     </label>
-    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ PRINT</button>
-    <button class="nav-btn nav-btn-ghost" onclick="loadPsFromFirebase()">🔄 Nuvem</button>
+    <button class="nav-btn nav-btn-blue" id="printBtn2">🖼️ Salvar Imagem</button>
     <span class="status-chip" id="status2">✅ 314 registros · FALTANTES_SPA1.xlsx</span>
   </div>
 </nav>
@@ -509,26 +591,10 @@
     <div class="chart-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap;">
         <div class="chart-title" style="margin-bottom:0">Aderência por Destino</div>
-        <span class="chart-hint">agrupado por ilha · clique para filtrar</span>
-        <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;">
-          <button id="adhFilterAll"    onclick="setAdhFilter('all')"     style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #002961;background:#002961;color:#fff;cursor:pointer;transition:.2s">Todos</button>
-          <button id="adhFilterBelow" onclick="setAdhFilter('below')"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #dc2626;background:#fff;color:#dc2626;cursor:pointer;transition:.2s">&#60; 100%</button>
-          <button id="adhFilterFull"  onclick="setAdhFilter('full')"   style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;border:2px solid #16a34a;background:#fff;color:#16a34a;cursor:pointer;transition:.2s">= 100%</button>
-        </div>
+        <span class="chart-hint">▼ decrescente · clique numa barra para filtrar</span>
       </div>
       <canvas id="aderenciaChart" height="90" style="cursor:pointer"></canvas>
       <div id="aderenciaTable" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
-    </div>
-
-    <!-- LOCAL D por Contenedor (ROADMAP PROCV) -->
-    <div class="chart-panel" id="localChartPanel" style="display:none;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;flex-wrap:wrap;">
-        <div class="chart-title" style="margin-bottom:0">📍 LOCAL por Contenedor</div>
-        <span class="chart-hint">PROCV: Contenedor → PREFIXO (col C) → LOCAL (col D) · ROADMAP</span>
-        <div id="localChartLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-left:auto;"></div>
-      </div>
-      <canvas id="localByContChart" height="110" style="cursor:pointer"></canvas>
-      <div id="localChartSummary" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
 
     <!-- TABLE -->
@@ -573,7 +639,6 @@
   </div><!-- /captureArea -->
 </div>
 
-<!-- ═══ TAB 2 — PÓS SORTING ═════════════════════════════════════════ -->
 <div class="tab-panel" id="tab2">
 <div id="ps2FullPanel">
   <div class="panel-header">
@@ -586,32 +651,32 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px;">
       <div class="kpi-card" style="border-top:4px solid var(--primary);">
         <div class="kpi-label">Total Faltantes</div>
-        <div class="kpi-value">314</div>
+        <div class="kpi-value" id="ps2KpiTotal">314</div>
       </div>
       <div class="kpi-card" style="border-top:4px solid var(--primary2);">
         <div class="kpi-label accent">Rotas Afetadas</div>
-        <div class="kpi-value">140</div>
+        <div class="kpi-value" id="ps2KpiRotas">140</div>
       </div>
       <div class="kpi-card" style="border-top:4px solid var(--orange);">
         <div class="kpi-label orange">Caminho Estação</div>
-        <div class="kpi-value">226</div>
+        <div class="kpi-value" id="ps2KpiCaminho">226</div>
       </div>
       <div class="kpi-card" style="border-top:4px solid var(--green);">
         <div class="kpi-label green">Na Estação</div>
-        <div class="kpi-value">88</div>
+        <div class="kpi-value" id="ps2KpiEstacao">88</div>
       </div>
       <div class="kpi-card" style="border-top:4px solid var(--accent);">
         <div class="kpi-label" style="background:var(--primary3)">Volumosos</div>
-        <div class="kpi-value">2</div>
+        <div class="kpi-value" id="ps2KpiVol">2</div>
       </div>
     </div>
 
     <!-- PENDENTES GERAL — gauge + detalhamento -->
-    <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;margin-bottom:14px;">
+    <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;margin-bottom:14px;" class="ps2-top-grid">
       <!-- Gauge card -->
       <div class="chart-panel" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
-        <div class="chart-title" style="display:block;text-align:center;width:100%;margin-bottom:10px;font-size:18px;">📦 Pendentes Geral</div>
-        <canvas id="ps2GaugeCanvas" width="300" height="165"></canvas>
+        <div class="chart-title" style="display:block;text-align:center;width:100%;margin-bottom:10px;">📦 Pendentes Geral</div>
+        <canvas id="ps2GaugeCanvas" width="300" height="165" style="max-width:100%;height:auto;"></canvas>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:10px;">
           <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;">
             <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Caminho Estação</div>
@@ -625,7 +690,7 @@
       </div>
       <!-- Detalhamento horizontal bar chart -->
       <div class="chart-panel" style="margin-bottom:0;">
-        <div class="chart-title" style="display:block;text-align:center;width:100%;font-size:18px;">📊 Detalhamento por Localização</div>
+        <div class="chart-title" style="display:block;text-align:center;width:100%;">📊 Detalhamento por Localização</div>
         <canvas id="psDetChart" height="100"></canvas>
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div style="text-align:center;background:#eff6ff;border-radius:10px;padding:12px;border:1.5px solid #bfdbfe;">
@@ -646,49 +711,45 @@
 
     <!-- PENDENTES POR ILHA (Ponto) -->
     <div class="chart-panel" style="margin-bottom:14px;">
-      <div class="chart-title" style="font-size:18px;">🏝️ Pendentes por Ilha</div>
+      <div class="chart-title">🏝️ Pendentes por Ilha</div>
       <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;min-width:400px;">
+        <table style="width:100%;border-collapse:separate;border-spacing:6px;min-width:400px;">
           <thead>
-            <tr id="psIlhaHeader" style="background:var(--primary);">
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">A</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">B</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">D</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">F</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">J</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">K</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">M</th>
-              <th style="color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center">P</th>
+            <tr id="psIlhaHeader" style="background:transparent;">
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">A</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">B</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">D</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">F</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">J</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">K</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">M</th>
+              <th style="background:linear-gradient(120deg,var(--primary),var(--primary2));color:#fff;padding:13px 16px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;border-radius:10px;">P</th>
             </tr>
           </thead>
           <tbody>
             <tr id="psIlhaRow">
-              <td id="ilhaCell_A" style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#dc2626;color:#fff;border-radius:0;">287</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#1a56db;color:#fff;">21</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
-              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;">1</td>
+              <td id="ilhaCell_A" style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#dc2626;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">287</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#1a56db;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">21</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">1</td>
+              <td style="text-align:center;padding:16px 14px;font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;background:#06418f;color:#fff;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.12);">1</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- 2 charts: top rotas + distribuição por ponto -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" id="ps2CaptureArea">
-      <div class="chart-panel" style="margin-bottom:0">
-        <div class="chart-title" style="font-size:18px;">📍 Faltantes por Rota (Top 15)</div>
-        <canvas id="psRotaChart" height="160"></canvas>
-      </div>
-      <div class="chart-panel" style="margin-bottom:0">
-        <div class="chart-title" style="font-size:18px;">🏝️ Distribuição por Ponto</div>
-        <canvas id="psPontoChart" height="160"></canvas>
-        <div id="psPontoLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
-      </div>
+    <!-- FALTANTES POR ROTA — full width -->
+    <div class="chart-panel" style="margin-bottom:14px;" id="ps2CaptureArea">
+      <div class="chart-title">📍 Faltantes por Rota (Top 15)</div>
+      <canvas id="psRotaChart" height="120"></canvas>
     </div>
+
+    <!-- Hidden canvas for JS compat -->
+    <div style="display:none"><canvas id="psPontoChart"></canvas><div id="psPontoLegend"></div></div>
 
     <!-- DATA TABLE -->
     <div class="table-panel">
@@ -723,6 +784,7 @@
   </div>
 </div><!-- /ps2FullPanel -->
 </div>
+
 
 <!-- ═══ TAB 3 ════════════════════════════════════════════════════════ -->
 <div class="tab-panel" id="tab3">
@@ -770,11 +832,9 @@
 
 <!-- ═══ SCRIPTS ══════════════════════════════════════════════════════ -->
 <script>
-const FIREBASE_URL        = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
-const FIREBASE_PS_URL     = "https://reportinventario-default-rtdb.firebaseio.com/pos_sorting_spa1.json";
-const FIREBASE_ROADMAP_URL= "https://reportinventario-default-rtdb.firebaseio.com/roadmap_spa1.json";
-const LS_TAB1    = "audit_spa1_v2";
-const LS_ROADMAP = "roadmap_spa1_v1";
+const FIREBASE_URL    = "https://reportinventario-default-rtdb.firebaseio.com/dashboard_auditoria.json";
+const FIREBASE_PS_URL = "https://reportinventario-default-rtdb.firebaseio.com/pos_sorting_spa1.json";
+const LS_TAB1 = "audit_spa1_v2";
 
 let currentRows  = [];
 let activeChart  = null;
@@ -785,7 +845,6 @@ let psPontoChart = null;
 let fEstado = "all";
 let fTurno  = "all";
 let fCont   = null;
-let fIlha   = null;
 let fRep    = null;
 let fSearch = "";
 let rankExpanded = false;
@@ -826,7 +885,6 @@ function getFiltered() {
     if (fEstado !== "all" && normalize(r.estado) !== fEstado) return false;
     if (fTurno  !== "all" && classifyTurno(r.contenedor)  !== fTurno) return false;
     if (fCont   && r.contenedor !== fCont) return false;
-    if (fIlha   && String(r.contenedor||"").charAt(0).toUpperCase() !== fIlha) return false;
     if (fRep    && r.repAuditoria !== fRep) return false;
     if (lq) {
       // Search across all known fields
@@ -887,7 +945,7 @@ function clearCont() {
 }
 
 function resetFilters() {
-  fEstado = "all"; fTurno = "all"; fCont = null; fIlha = null; fRep = null; fSearch = "";
+  fEstado = "all"; fTurno = "all"; fCont = null; fRep = null; fSearch = "";
   $("filterEstado").value = "all";
   document.querySelectorAll("#turnoChips .filter-chip").forEach(c => c.classList.remove("active"));
   document.querySelector("[data-turno='all']").classList.add("active");
@@ -1053,34 +1111,65 @@ function renderDashboard(rows) {
         </div>`).join("")
     : `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:6px 0">Sem contenedores para exibir.</div>`;
 
-  // ── Aderência por Ilha (inicial do Contenedor) ───────────────────
-  const ilhaMap = {};
-  rows.forEach(r => {
-    const ilha = String(r.contenedor || "").trim().charAt(0).toUpperCase();
-    if (!ilha) return;
-    if (!ilhaMap[ilha]) ilhaMap[ilha] = { total: 0, ok: 0 };
-    ilhaMap[ilha].total++;
-    if (normalize(r.estado) === "correto") ilhaMap[ilha].ok++;
+  // Aderência por destino — sorted DESCENDING by adh%
+  const adhData = conts.map(c => {
+    const t  = rows.filter(r=>r.contenedor===c).length;
+    const ok = rows.filter(r=>r.contenedor===c&&normalize(r.estado)==="correto").length;
+    return { cont:c, adh: t>0 ? Math.round((ok/t)*10000)/100 : 0 };
+  }).sort((a,b) => b.adh - a.adh).slice(0,15);
+
+  const highlight = (d) => d.cont===fCont ? "#d97706" : d.adh>=90 ? "#002961" : d.adh>=50 ? "#1a56db" : "#60a5fa";
+
+  if (activeChart) activeChart.destroy();
+  activeChart = new Chart($("aderenciaChart"), {
+    type: "bar",
+    data: {
+      labels: adhData.map(d=>d.cont),
+      datasets: [{
+        label: "Aderência (%)",
+        data:  adhData.map(d=>d.adh),
+        backgroundColor: adhData.map(d=>highlight(d)),
+        borderRadius: 10,
+        hoverBackgroundColor: "#06418f"
+      }]
+    },
+    options: {
+      responsive: true,
+      layout: { padding: { top: 28 } },
+      onClick: (_, els) => {
+        if (!els.length) return;
+        setContFilter(adhData[els[0].index].cont);
+      },
+      scales: {
+        y: { beginAtZero:true, max:110, ticks:{callback:v=>v<=100?v+"%":""}, grid:{color:"#f1f5f9"} },
+        x: { grid:{display:false} }
+      },
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks:{ label:ctx=>`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%` } },
+        datalabels: {
+          display: true, anchor:"end", align:"top", color:"#002961",
+          font:{ weight:"900", size:12, family:"'Barlow Condensed',sans-serif" },
+          formatter: v => v.toFixed(1).replace(".",",")+"%",
+          padding: { bottom: 4 }
+        }
+      },
+      animation: { duration:700, easing:"easeOutQuart" }
+    }
   });
 
-  const adhRaw = Object.entries(ilhaMap).map(([ilha, d]) => ({
-    cont:  ilha,
-    total: d.total,
-    ok:    d.ok,
-    adh:   d.total > 0 ? Math.round((d.ok / d.total) * 10000) / 100 : 0
-  }));
-  // Sort: <100% descending first, then =100%
-  adhRaw.sort((a, b) => {
-    const aFull = a.adh >= 100, bFull = b.adh >= 100;
-    if (aFull !== bFull) return aFull ? 1 : -1;
-    return b.adh - a.adh;
-  });
-
-  // Store globally for filter
-  window._adhRawAll = adhRaw;
-  if (typeof window._adhFilter === "undefined") window._adhFilter = "all";
-
-  renderAderenciaChart(adhRaw, rows, fCont);
+  // Summary chips below the chart
+  const aderenciaTableEl = $("aderenciaTable");
+  if (aderenciaTableEl) {
+    aderenciaTableEl.innerHTML = adhData.map(d => {
+      const color = d.adh>=90?"#16a34a":d.adh>=50?"#1a56db":"#dc2626";
+      const bg    = d.adh>=90?"#d1fae5":d.adh>=50?"#dbeafe":"#fee2e2";
+      return `<div onclick="setContFilter('${escH(d.cont)}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}22;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:#374151;">${escH(d.cont)}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".",",")}%</span>
+      </div>`;
+    }).join("");
+  }
 
   // Table
   $("dataTable").innerHTML = rows.slice(0,300).map(r=>`
@@ -1122,102 +1211,12 @@ function renderDashboard(rows) {
     : `<div class="empty-state">Nenhum dado de Rep Auditoria.</div>`;
 }
 
-/* ── ADERÊNCIA CHART RENDER + FILTER ─────────────────────────── */
-function setAdhFilter(mode) {
-  window._adhFilter = mode;
-  // Update button styles
-  const styles = {
-    all:   { id:"adhFilterAll",    bg:"#002961", color:"#fff",    border:"#002961" },
-    below: { id:"adhFilterBelow",  bg:"#dc2626", color:"#fff",    border:"#dc2626" },
-    full:  { id:"adhFilterFull",   bg:"#16a34a", color:"#fff",    border:"#16a34a" }
-  };
-  ["all","below","full"].forEach(k => {
-    const el = $(styles[k].id); if (!el) return;
-    const active = k === mode;
-    el.style.background = active ? styles[k].bg    : "#fff";
-    el.style.color      = active ? styles[k].color : styles[k].bg;
-    el.style.borderColor= styles[k].border;
-  });
-  if (window._adhRawAll) renderAderenciaChart(window._adhRawAll, currentRows, window._fContGlobal || "");
-}
-
-function renderAderenciaChart(adhRaw, rows, fCont) {
-  window._fContGlobal = fCont;
-  const filter = window._adhFilter || "all";
-  const adhData = adhRaw.filter(d =>
-    filter === "all"   ? true :
-    filter === "below" ? d.adh < 100 :
-    d.adh >= 100
-  );
-
-  const highlight = d =>
-    d.cont === fIlha ? "#d97706" :
-    d.adh >= 100     ? "#16a34a" :
-    d.adh >= 50      ? "#1a56db" : "#dc2626";
-
-  if (activeChart) activeChart.destroy();
-  activeChart = new Chart($("aderenciaChart"), {
-    type: "bar",
-    data: {
-      labels: adhData.map(d => d.cont),
-      datasets: [{
-        label: "Aderência (%)",
-        data:  adhData.map(d => d.adh),
-        backgroundColor: adhData.map(d => highlight(d)),
-        borderRadius: 10,
-        hoverBackgroundColor: "#06418f"
-      }]
-    },
-    options: {
-      responsive: true,
-      layout: { padding: { top: 28 } },
-      onClick: (_, els) => {
-        if (!els.length) return;
-        const ilha = adhData[els[0].index].cont;
-        if (fIlha === ilha) { fIlha = null; } else { fIlha = ilha; }
-        renderDashboard(getFiltered());
-      },
-      scales: {
-        y: { beginAtZero: true, max: 110, ticks: { callback: v => v <= 100 ? v + "%" : "" }, grid: { color: "#f1f5f9" } },
-        x: { grid: { display: false }, ticks: { font: { weight: "800", size: 11, family: "'Barlow Condensed',sans-serif" } } }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => {
-          const d = adhData[ctx.dataIndex];
-          return [`Aderência: ${ctx.raw.toFixed(2).replace(".", ",")}%`, `${d.ok} corretos / ${d.total} total`];
-        }}},
-        datalabels: {
-          display: true, anchor: "end", align: "top", color: "#002961",
-          font: { weight: "900", size: 12, family: "'Barlow Condensed',sans-serif" },
-          formatter: v => v.toFixed(1).replace(".", ",") + "%",
-          padding: { bottom: 4 }
-        }
-      },
-      animation: { duration: 700, easing: "easeOutQuart" }
-    }
-  });
-
-  // Summary chips
-  const aderenciaTableEl = $("aderenciaTable");
-  if (aderenciaTableEl) {
-    aderenciaTableEl.innerHTML = adhData.map(d => {
-      const color = d.adh >= 100 ? "#16a34a" : d.adh >= 50 ? "#1a56db" : "#dc2626";
-      const bg    = d.adh >= 100 ? "#d1fae5" : d.adh >= 50 ? "#dbeafe" : "#fee2e2";
-      return `<div onclick="fIlha=fIlha===this.dataset.ilha?null:this.dataset.ilha;renderDashboard(getFiltered())" data-ilha="${escH(d.cont)}" style="cursor:pointer;display:flex;align-items:center;gap:6px;background:${bg};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}33;">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#374151;">Ilha ${escH(d.cont)}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${color};">${d.adh.toFixed(1).replace(".", ",")}%</span>
-        <span style="font-size:11px;color:#64748b;font-weight:600;">${d.ok}/${d.total}</span>
-      </div>`;
-    }).join("");
-  }
-}
+/* ── RENDER (called after upload — sets currentRows) ─ */
 function render(rows, label="CSV") {
   currentRows = rows;
   $("lastUpdate").textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")} · ${label}`;
   setStatus(`${fmt(rows.length)} registros · ${fmt([...new Set(rows.map(r=>r.contenedor).filter(Boolean))].length)} carrinhos`);
   renderDashboard(rows);
-  if (ROADMAP_DATA.length) updateDetChartFromRoadmap();
 }
 
 /* ── GENERIC TAB RENDER ─────────────────────────────── */
@@ -1264,21 +1263,6 @@ async function loadFromFirebase() {
   } catch { setStatus("Não foi possível carregar da nuvem."); loadLocal(); }
 }
 
-async function loadPsFromFirebase() {
-  try {
-    const res  = await fetch(FIREBASE_PS_URL);
-    if (!res.ok) return false;
-    const data = await res.json();
-    if (!data?.rows?.length) return false;
-    // Save to localStorage for next time
-    try { localStorage.setItem("ps_data", JSON.stringify({ rows: data.rows, headers: data.headers || [] })); } catch {}
-    renderPosSorting(data.rows, data.headers || []);
-    const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString("pt-BR") : "";
-    $("status2").textContent = `✅ ${fmt(data.rows.length)} registros · nuvem${ts ? " · " + ts : ""}`;
-    return true;
-  } catch(err) { console.warn("PS Firebase load:", err); return false; }
-}
-
 /* ── EVENTS: TAB 1 ──────────────────────────────────── */
 $("csvFile").addEventListener("change", async e => {
   const file = e.target.files[0]; if (!file) return;
@@ -1295,270 +1279,15 @@ $("csvFile").addEventListener("change", async e => {
 
 $("reloadBtn").addEventListener("click", loadFromFirebase);
 
-/* ── ROADMAP: save / load ───────────────────────────────────────── */
-function saveRoadmapLocal(rows) {
-  try { localStorage.setItem(LS_ROADMAP, JSON.stringify({ rows, ts: Date.now() })); } catch {}
-}
-
-async function saveRoadmapToFirebase(rows, fileName) {
-  try {
-    setStatus("Salvando ROADMAP na nuvem…");
-    const payload = { updatedAt: new Date().toISOString(), fileName, totalRows: rows.length, rows };
-    const res = await fetch(FIREBASE_ROADMAP_URL, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (!res.ok) throw new Error("Firebase ROADMAP PUT failed");
-    setStatus("✅ ROADMAP salvo na nuvem: " + rows.length + " linhas.");
-  } catch(err) { console.warn("ROADMAP Firebase save:", err); }
-}
-
-async function loadRoadmapFromFirebase() {
-  try {
-    const res  = await fetch(FIREBASE_ROADMAP_URL);
-    if (!res.ok) return false;
-    const data = await res.json();
-    if (data?.rows?.length) {
-      ROADMAP_DATA = data.rows;
-      saveRoadmapLocal(data.rows);
-      const ts = data.updatedAt ? new Date(data.updatedAt).toLocaleString("pt-BR") : "";
-      setStatus("ROADMAP nuvem: " + data.rows.length + " linhas" + (ts ? " · " + ts : ""));
-      updateDetChartFromRoadmap();
-      return true;
-    }
-  } catch(err) { console.warn("ROADMAP Firebase load:", err); }
-  return false;
-}
-
-function loadRoadmapLocal() {
-  try {
-    const d = JSON.parse(localStorage.getItem(LS_ROADMAP) || "null");
-    if (d?.rows?.length) { ROADMAP_DATA = d.rows; updateDetChartFromRoadmap(); return true; }
-  } catch {}
-  return false;
-}
-
-/* ── ROADMAP UPLOAD (join Rota + LOCAL D → Detalhamento chart) ── */
-let ROADMAP_DATA = []; // [{shipment, rota, prefixo, local}]
-
-$("roadmapFile").addEventListener("change", async e => {
-  const file = e.target.files[0]; if (!file) return;
-  setStatus("Lendo ROADMAP...");
-  try {
-    const ext = file.name.split(".").pop().toLowerCase();
-    let rows = [];
-    if (ext === "csv") {
-      const text = await file.text();
-      const { rows: parsed } = parseCSVGeneric(text);
-      rows = parsed.map(r => ({
-        shipment: (r["Shipment"] || r["ShipmentID"] || r["shipment"] || "").trim(),
-        rota:     (r["Rota"]    || r["rota"]     || "").trim(),
-        prefixo:  (r["PREFIXO"] || r["Prefixo"]  || r["prefixo"]  || "").trim(),
-        local:    (r["LOCAL"]   || r["Local"]    || r["local"]    || "").trim()
-      }));
-    } else {
-      const ab = await file.arrayBuffer();
-      const wb = XLSX.read(ab, { type: "array" });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      if (!data.length) { setStatus("ROADMAP vazio."); return; }
-      const hdrs = data[0].map(h => String(h||"").trim());
-      const idxRota     = hdrs.findIndex(h => /^rota$/i.test(h));
-      const idxPrefixo  = hdrs.findIndex(h => /^prefixo$/i.test(h));
-      const idxLocal    = hdrs.findIndex(h => /^local$/i.test(h));
-      const idxShipment = hdrs.findIndex(h => /^shipment/i.test(h));
-      const iR = idxRota     >= 0 ? idxRota     : 1;
-      const iP = idxPrefixo  >= 0 ? idxPrefixo  : 2;
-      const iL = idxLocal    >= 0 ? idxLocal    : 3;
-      const iS = idxShipment >= 0 ? idxShipment : 6;
-      rows = data.slice(1).map(r => ({
-        shipment: String(r[iS] || "").trim(),
-        rota:     String(r[iR] || "").trim(),
-        prefixo:  String(r[iP] || "").trim(),
-        local:    String(r[iL] || "").trim()
-      })).filter(r => r.rota || r.local || r.prefixo);
-    }
-    ROADMAP_DATA = rows;
-    saveRoadmapLocal(rows);
-    updateDetChartFromRoadmap();
-    await saveRoadmapToFirebase(rows, file.name);
-  } catch(err) { console.error(err); setStatus("Erro ao ler ROADMAP."); }
-});
-
-function updateDetChartFromRoadmap() {
-  if (!ROADMAP_DATA.length) return;
-  // 1. Total por LOCAL no ROADMAP (cada linha = 1 shipment)
-  const localTotal = {};
-  ROADMAP_DATA.forEach(r => {
-    const l = String(r.local || "").trim().replace(/^XPT\s*-\s*/i, "");
-    if (l) localTotal[l] = (localTotal[l] || 0) + 1;
-  });
-
-  // 2. Build Shipment → LOCAL lookup
-  const shipToLocal = {};
-  ROADMAP_DATA.forEach(r => {
-    const s = String(r.shipment || "").trim();
-    const l = String(r.local    || "").trim().replace(/^XPT\s*-\s*/i, "");
-    if (s && l) shipToLocal[s] = l;
-  });
-
-  // 3. Count auditados por LOCAL (CSV rows matched by ShipmentID)
-  const localAuditado = {};
-  if (currentRows && currentRows.length) {
-    currentRows.forEach(row => {
-      const sid   = String(row.shipmentId || row["shipment id"] || row["shipment_id"] || "").trim();
-      const local = shipToLocal[sid];
-      if (local) localAuditado[local] = (localAuditado[local] || 0) + 1;
-    });
-  }
-
-  // 4. Faltante = total ROADMAP − auditado CSV
-  const LOCAL_ORDER = ["NEX","SVC","EMN1","EPA1","EPA2","EPA3","EPA4","EPA5","EPA6","EPA7","EPA8","EPA9","ETO4"];
-  const faltanteData = LOCAL_ORDER
-    .filter(l => localTotal[l] > 0)
-    .map(l => ({
-      local:     l,
-      total:     localTotal[l]     || 0,
-      auditado:  localAuditado[l]  || 0,
-      faltante:  Math.max(0, (localTotal[l] || 0) - (localAuditado[l] || 0))
-    }))
-    .sort((a, b) => b.faltante - a.faltante);
-
-  if (!faltanteData.length) { setStatus("Nenhum LOCAL encontrado no ROADMAP."); return; }
-
-  const COLORS = [
-    "#dc2626","#ef4444","#f87171","#fb923c",
-    "#f59e0b","#d97706","#1a56db","#3b82f6",
-    "#002961","#06418f","#7c3aed","#16a34a","#0891b2"
-  ];
-
-  // ── Gráfico LOCAL — Faltante ──────────────────────────────────────
-  const panel = $("localChartPanel");
-  if (panel) panel.style.display = "block";
-
-  // Update panel title
-  const titleEl = panel?.querySelector(".chart-title");
-  if (titleEl) titleEl.textContent = "📦 Faltantes por LOCAL";
-  const hintEl = panel?.querySelector(".chart-hint");
-  if (hintEl) hintEl.textContent = "PROCV: Shipment (ROADMAP) × ShipmentID (CSV) → pendentes por LOCAL";
-
-  if (window._localByContChart) window._localByContChart.destroy();
-  window._localByContChart = new Chart($("localByContChart"), {
-    type: "bar",
-    data: {
-      labels: faltanteData.map(d => d.local),
-      datasets: [{
-        label: "Faltantes",
-        data:  faltanteData.map(d => d.faltante),
-        backgroundColor: faltanteData.map((_, i) => COLORS[i % COLORS.length]),
-        borderRadius: 10,
-        hoverBackgroundColor: "#002961"
-      }]
-    },
-    options: {
-      responsive: true,
-      layout: { padding: { top: 32 } },
-      scales: {
-        y: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { color: "#64748b" } },
-        x: { grid: { display: false }, ticks: { font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" }, color: "#002961" } }
-      },
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          display: true, anchor: "end", align: "top", color: "#002961",
-          font: { weight: "900", size: 13, family: "'Barlow Condensed',sans-serif" },
-          formatter: v => v.toLocaleString("pt-BR")
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const d = faltanteData[ctx.dataIndex];
-              const pct = d.total > 0 ? ((d.faltante / d.total) * 100).toFixed(1) : "0.0";
-              return [
-                `Faltantes: ${d.faltante.toLocaleString("pt-BR")}`,
-                `Auditados: ${d.auditado.toLocaleString("pt-BR")}`,
-                `Total ROADMAP: ${d.total.toLocaleString("pt-BR")}`,
-                `Pendente: ${pct}%`
-              ];
-            }
-          }
-        }
-      },
-      animation: { duration: 700, easing: "easeOutQuart" }
-    }
-  });
-
-  // ── Summary chips ──────────────────────────────────────────────────
-  const summary = $("localChartSummary");
-  if (summary) {
-    summary.innerHTML = faltanteData.map((d, i) => {
-      const pct   = d.total > 0 ? Math.round(d.faltante / d.total * 100) : 0;
-      const color = COLORS[i % COLORS.length];
-      const bgClr = pct >= 80 ? "#fee2e2" : pct >= 40 ? "#fef3c7" : "#d1fae5";
-      return `<div title="Auditados: ${d.auditado} / Total: ${d.total}" style="display:flex;align-items:center;gap:6px;background:${bgClr};border-radius:8px;padding:5px 11px;border:1.5px solid ${color}55;cursor:default;">
-        <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0;"></span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#374151;">${escH(d.local)}</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:${color};">${d.faltante.toLocaleString("pt-BR")}</span>
-        <span style="font-size:11px;color:#64748b;font-weight:700;">${pct}% pend.</span>
-      </div>`;
-    }).join("");
-  }
-
-  // ── Also update psDetChart (Detalhamento por Localização no Tab 2) ─
-  const COLORS2 = ["#002961","#06418f","#1a56db","#3b82f6","#60a5fa","#93c5fd",
-                   "#d97706","#f59e0b","#16a34a","#22c55e","#dc2626","#f87171","#7c3aed"];
-  if (psStaticDetChart) psStaticDetChart.destroy();
-  psStaticDetChart = new Chart($("psDetChart"), {
-    type: "bar",
-    data: {
-      labels: faltanteData.map(d => d.local),
-      datasets: [{
-        data: faltanteData.map(d => d.faltante),
-        backgroundColor: faltanteData.map((_, i) => COLORS2[i % COLORS2.length]),
-        borderRadius: 8
-      }]
-    },
-    options: {
-      indexAxis: "y", responsive: true,
-      scales: {
-        x: { beginAtZero: true, grid: { color: "#f1f5f9" }, ticks: { color: "#64748b" } },
-        y: { grid: { display: false }, ticks: { font: { weight: "800", size: 12, family: "'Barlow Condensed',sans-serif" }, color: "#002961" } }
-      },
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          display: true, anchor: "end", align: "right", color: "#002961",
-          font: { weight: "900", size: 13, family: "'Barlow Condensed',sans-serif" },
-          formatter: v => v.toLocaleString("pt-BR")
-        },
-        tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString("pt-BR") + " faltantes" } }
-      },
-      animation: { duration: 700, easing: "easeOutQuart" }
-    }
-  });
-
-  const totalFalt = faltanteData.reduce((a, d) => a + d.faltante, 0);
-  const totalAud  = faltanteData.reduce((a, d) => a + d.auditado, 0);
-  const totalRoad = faltanteData.reduce((a, d) => a + d.total, 0);
-  setStatus(`Faltantes: ${totalFalt.toLocaleString("pt-BR")} · Auditados: ${totalAud.toLocaleString("pt-BR")} · ROADMAP: ${totalRoad.toLocaleString("pt-BR")}`);
-}
-
 $("printBtn").addEventListener("click", async () => {
   try {
-    setStatus("Gerando imagem 4K…");
-    const target = $("captureArea");
-    const canvas = await html2canvas(target, {
-      scale: 4,
-      backgroundColor: "#eef3fb",
-      useCORS: true,
-      logging: false,
-      imageTimeout: 0,
-      allowTaint: false,
-      width: target.scrollWidth,
-      height: target.scrollHeight
-    });
+    setStatus("Gerando imagem…");
+    const canvas = await html2canvas($("captureArea"), { scale:2, backgroundColor:"#eef3fb", useCORS:true, logging:false });
     const link = document.createElement("a");
-    link.download = `auditoria-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
+    link.download = `auditoria-spa1-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
-    setStatus("✅ Imagem 4K salva!");
+    setStatus("Imagem HD salva!");
   } catch(err) { console.error(err); setStatus("Erro ao gerar imagem."); }
 });
 
@@ -1570,20 +1299,13 @@ $("printBtn2").addEventListener("click", async () => {
   try {
     const target = $("ps2FullPanel");
     const canvas = await html2canvas(target, {
-      scale: 4,
-      backgroundColor: "#eef3fb",
-      useCORS: true,
-      logging: false,
-      imageTimeout: 0,
-      allowTaint: false,
-      width: target.scrollWidth,
-      height: target.scrollHeight
+      scale: 2, backgroundColor: "#eef3fb", useCORS: true, logging: false
     });
     const link = document.createElement("a");
-    link.download = `pos-sorting-spa1-4K-${new Date().toISOString().slice(0,10)}.png`;
+    link.download = `pos-sorting-spa1-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
-    btn.textContent = "✅ 4K Salvo!";
+    btn.textContent = "✅ Salvo!";
     setTimeout(() => { btn.textContent = prev; btn.disabled = false; }, 2000);
   } catch(err) {
     console.error(err);
@@ -1758,6 +1480,7 @@ async function handlePsFile(file) {
     // Reinit charts with new data
     initPsStatic();
     buildPsTable();
+    renderPs2IlhaCards(pontoSorted);
 
     $("status2").textContent = `✅ ${fmt(total)} registros · ${file.name}`;
 
@@ -1921,6 +1644,7 @@ function psRebuildCharts(filtered) {
       `<td onclick="psApplyFilter('ponto','${escH(k)}')" style="cursor:pointer;text-align:center;padding:12px 14px;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;background:${psFilters.ponto===k?'#7c2d12':(colors[i]||"#1a56db")};color:#fff;" title="Clique para filtrar">${fmt(v)}</td>`
     ).join("");
   }
+  renderPs2IlhaCards(pSorted);
 }
 
 function initPsStatic() {
@@ -2007,11 +1731,11 @@ function initPsStatic() {
         const label = psStaticRotaChart.data.labels[els[0].index];
         psApplyFilter("rota", label);
       },
-      scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:14,weight:"700"}}}},
+      scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:11}}}},
       plugins:{legend:{display:false},
         tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"top",color:"#002961",
-          font:{weight:"900",size:14,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}},
+          font:{weight:"900",size:11,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}},
       animation:{duration:700,easing:"easeOutQuart"}
     }
   });
@@ -2043,15 +1767,15 @@ function initPsStatic() {
       },
       layout: { padding: { right: 60 } },
       scales: {
-        x: { beginAtZero:true, grid:{color:"#f1f5f9"}, ticks:{color:"#64748b",font:{size:13}} },
-        y: { grid:{display:false}, ticks:{font:{weight:"800",size:16,family:"'Barlow Condensed',sans-serif"},color:"#002961"} }
+        x: { beginAtZero:true, grid:{color:"#f1f5f9"}, ticks:{color:"#64748b"} },
+        y: { grid:{display:false}, ticks:{font:{weight:"800",size:13,family:"'Barlow Condensed',sans-serif"},color:"#002961"} }
       },
       plugins: {
         legend: { display:false },
         datalabels: {
           display: true, anchor:"end", align:"right",
           color: ctx => ctx.dataIndex===PS_PONTO_DATA.indexOf(Math.max(...PS_PONTO_DATA))?"#dc2626":"#002961",
-          font: { weight:"900", size:16, family:"'Barlow Condensed',sans-serif" },
+          font: { weight:"900", size:13, family:"'Barlow Condensed',sans-serif" },
           formatter: (v) => `${v}  (${Math.round(v/pontoTotal*100)}%)`
         },
         tooltip: { callbacks:{ label:ctx=>`${ctx.raw} pacotes · ${Math.round(ctx.raw/pontoTotal*100)}%` } }
@@ -2066,7 +1790,7 @@ function initPsStatic() {
       const bg = PS_PONTO_DATA[i]===Math.max(...PS_PONTO_DATA)?"#dc2626":(pColors[i]||"#1a56db");
       return `<div style="display:flex;align-items:center;gap:5px;background:${bg}18;border:1.5px solid ${bg}44;border-radius:7px;padding:3px 10px;">
         <span style="width:10px;height:10px;border-radius:50%;background:${bg};display:inline-block"></span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${bg}">Ilha ${escH(lbl)}: ${PS_PONTO_DATA[i]}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:${bg}">Ilha ${escH(lbl)}: ${PS_PONTO_DATA[i]}</span>
       </div>`;
     }).join("");
   }
@@ -2156,11 +1880,6 @@ drawGauge(0);
 
 // Load tab1 — local first, then Firebase
 if (!loadLocal()) loadFromFirebase();
-
-// Load ROADMAP — localStorage first, then Firebase
-if (!loadRoadmapLocal()) {
-  loadRoadmapFromFirebase();
-}
 
 // Restore Pós Sorting — localStorage first, then Firebase
 try {
