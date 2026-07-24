@@ -680,11 +680,11 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:10px;">
           <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;">
             <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Caminho Estação</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--orange)">226</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--orange)" id="ps2GaugeCaminho">226</div>
           </div>
           <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;">
             <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Na Estação</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--green)">88</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--green)" id="ps2GaugeEstacao">88</div>
           </div>
         </div>
       </div>
@@ -695,15 +695,15 @@
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <div style="text-align:center;background:#eff6ff;border-radius:10px;padding:12px;border:1.5px solid #bfdbfe;">
             <div style="font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;margin-bottom:4px">Turno AM</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--primary)">314</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--primary)" id="ps2DetAM">314</div>
           </div>
           <div style="text-align:center;background:#f0fdf4;border-radius:10px;padding:12px;border:1.5px solid #bbf7d0;">
             <div style="font-size:13px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:4px">Volumosos</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--green)">2</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--green)" id="ps2DetVol">2</div>
           </div>
           <div style="text-align:center;background:#fefce8;border-radius:10px;padding:12px;border:1.5px solid #fde68a;">
             <div style="font-size:13px;font-weight:800;color:var(--orange);text-transform:uppercase;margin-bottom:4px">Sugeridos</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--orange)">1</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--orange)" id="ps2DetSug">1</div>
           </div>
         </div>
       </div>
@@ -1437,18 +1437,21 @@ async function handlePsFile(file) {
     const volumoso = newRaw.filter(r => normalize(String(r[5])).includes("volum")).length;
     const rotas    = new Set(newRaw.map(r => r[1]).filter(Boolean)).size;
 
-    // Update KPI cards
-    const kpiEls = document.querySelectorAll("#tab2 .kpi-value");
-    if (kpiEls[0]) kpiEls[0].textContent = fmt(total);
-    if (kpiEls[1]) kpiEls[1].textContent = fmt(rotas);
-    if (kpiEls[2]) kpiEls[2].textContent = fmt(caminho);
-    if (kpiEls[3]) kpiEls[3].textContent = fmt(naEst);
-    if (kpiEls[4]) kpiEls[4].textContent = fmt(volumoso);
+    // Update KPI cards by ID
+    if ($("ps2KpiTotal"))   $("ps2KpiTotal").textContent   = fmt(total);
+    if ($("ps2KpiRotas"))   $("ps2KpiRotas").textContent   = fmt(rotas);
+    if ($("ps2KpiCaminho")) $("ps2KpiCaminho").textContent = fmt(caminho);
+    if ($("ps2KpiEstacao")) $("ps2KpiEstacao").textContent = fmt(naEst);
+    if ($("ps2KpiVol"))     $("ps2KpiVol").textContent     = fmt(volumoso);
 
-    // Update caminho/naEst mini cards
-    const miniVals = document.querySelectorAll("#tab2 [style*='font-size:26px']");
-    if (miniVals[0]) miniVals[0].textContent = fmt(caminho);
-    if (miniVals[1]) miniVals[1].textContent = fmt(naEst);
+    // Update gauge sub-cards
+    if ($("ps2GaugeCaminho")) $("ps2GaugeCaminho").textContent = fmt(caminho);
+    if ($("ps2GaugeEstacao")) $("ps2GaugeEstacao").textContent = fmt(naEst);
+
+    // Update detalhamento sub-cards
+    if ($("ps2DetAM"))  $("ps2DetAM").textContent  = fmt(total);
+    if ($("ps2DetVol")) $("ps2DetVol").textContent = fmt(volumoso);
+    if ($("ps2DetSug")) $("ps2DetSug").textContent = fmt(newRaw.filter(r=>normalize(String(r[5]||"")).includes("suger")).length);
 
     // Update PS_RAW globally and rebuild table + charts
     PS_RAW.length = 0;
@@ -1656,10 +1659,16 @@ function initPsStatic() {
     const W=canvas.width, H=canvas.height;
     ctx.clearRect(0,0,W,H);
     const cx=W/2, cy=H*0.83, r=Math.min(W*0.40,H*0.72), lw=Math.max(13,r*0.11);
-    // compute live totals from PS_RAW
-    const liveTotal   = PS_RAW.length || 314;
-    const liveCaminho = PS_RAW.filter(r=>normalize(String(r[4])).includes("caminho")).length || 226;
-    const pct = (liveCaminho/liveTotal)*100;
+
+    const liveTotal   = PS_RAW.length;
+    const liveCaminho = PS_RAW.filter(r=>normalize(String(r[4]||"")).includes("caminho")).length;
+    const liveEstacao = PS_RAW.filter(r=>{ const n=normalize(String(r[4]||"")); return n.includes("estac")&&!n.includes("caminho"); }).length;
+    const pct = liveTotal > 0 ? (liveCaminho / liveTotal) * 100 : 0;
+
+    // Update DOM mini-cards inside gauge
+    if ($("ps2GaugeCaminho")) $("ps2GaugeCaminho").textContent = fmt(liveCaminho);
+    if ($("ps2GaugeEstacao")) $("ps2GaugeEstacao").textContent = fmt(liveEstacao);
+
     // track
     ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
     ctx.strokeStyle="#e2e8f0"; ctx.lineWidth=lw; ctx.lineCap="butt"; ctx.stroke();
@@ -1678,18 +1687,28 @@ function initPsStatic() {
     ctx.fillStyle="#64748b"; ctx.font=`600 ${Math.round(r*0.13)}px 'Barlow',sans-serif`;
     ctx.fillText("PENDENTES", cx, cy-r*0.07);
     ctx.font=`700 ${Math.round(r*0.12)}px 'Barlow',sans-serif`; ctx.fillStyle="#94a3b8";
-    ctx.textAlign="left";  ctx.fillText("0",    cx-r-3, cy+11);
-    ctx.textAlign="right"; ctx.fillText(String(liveTotal),  cx+r+3, cy+11);
+    ctx.textAlign="left";  ctx.fillText("0", cx-r-3, cy+11);
+    ctx.textAlign="right"; ctx.fillText(String(liveTotal), cx+r+3, cy+11);
   })();
 
-  // Det chart — horizontal bars
+  // Det chart — horizontal bars (live data from PS_RAW)
+  const liveCaminhoD = PS_RAW.filter(r => normalize(String(r[4]||"")).includes("caminho")).length;
+  const liveNaEstD   = PS_RAW.filter(r => { const n=normalize(String(r[4]||"")); return n.includes("estac") && !n.includes("caminho"); }).length;
+  const liveVolD     = PS_RAW.filter(r => normalize(String(r[5]||"")).includes("volum")).length;
+  const liveSugD     = PS_RAW.filter(r => normalize(String(r[5]||"")).includes("suger")).length;
+
+  // Update detalhamento sub-cards
+  if ($("ps2DetAM"))  $("ps2DetAM").textContent  = fmt(PS_RAW.length);
+  if ($("ps2DetVol")) $("ps2DetVol").textContent = fmt(liveVolD);
+  if ($("ps2DetSug")) $("ps2DetSug").textContent = fmt(liveSugD);
+
   if (psStaticDetChart) psStaticDetChart.destroy();
   psStaticDetChart = new Chart($("psDetChart"), {
     type:"bar",
     data:{
       labels:["Caminho para a Estação","Na Estação"],
       datasets:[{
-        data:[226,88],
+        data:[liveCaminhoD, liveNaEstD],
         backgroundColor:["#d97706","#16a34a"],
         borderRadius:8
       }]
