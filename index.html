@@ -665,7 +665,7 @@
     <div class="panel-title" style="text-align:center;width:100%">📋 Pós Sorting — Faltantes SPA1</div>
   </div>
 
-  <div style="max-width:1400px;margin:0 auto;padding-bottom:4px;">
+  <div style="padding-bottom:4px;">
 
     <!-- KPI CARDS -->
     <div class="ps2-kpi-grid">
@@ -797,7 +797,7 @@
       </div>
     </div>
 
-  </div><!-- /max-width -->
+  </div><!-- /content -->
 
   <div style="text-align:center;padding:10px 0 6px;font-family:'Barlow',sans-serif;font-size:11px;color:#94a3b8;letter-spacing:.04em;">
     Suporte: Ezequiel Miranda
@@ -1736,18 +1736,19 @@ function initPsStatic() {
     },
     options:{
       indexAxis:"y", responsive:true,
+      layout:{padding:{right:44}},
       onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
       onClick: (_, els) => {
         if (!els.length) return;
         psApplyFilter("loc", els[0].index===0 ? "caminho" : "estacao");
       },
-      scales:{ x:{beginAtZero:true,grid:{color:"#f1f5f9"},ticks:{color:"#64748b"}}, y:{grid:{display:false}} },
+      scales:{ x:{beginAtZero:true,grid:{color:"#f1f5f9"},ticks:{color:"#64748b",font:{size:12}}}, y:{grid:{display:false},ticks:{font:{size:13,weight:"700"}}} },
       plugins:{
         legend:{display:false},
         tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"right",color:"#002961",
-          font:{weight:"900",size:16,family:"'Barlow Condensed',sans-serif"},formatter:v=>v,
-          padding:{top:4,bottom:4,left:8,right:8},backgroundColor:"rgba(255,255,255,.85)",borderRadius:6}
+          font:{weight:"900",size:22,family:"'Barlow Condensed',sans-serif"},formatter:v=>v,
+          padding:{top:5,bottom:5,left:9,right:9},backgroundColor:"rgba(255,255,255,.85)",borderRadius:6}
       },
       animation:{duration:700,easing:"easeOutQuart"}
     }
@@ -1765,7 +1766,7 @@ function initPsStatic() {
     },
     options:{
       responsive:true,
-      layout:{padding:{top:24}},
+      layout:{padding:{top:32}},
       onHover: (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; },
       onClick: (_, els) => {
         if (!els.length) return;
@@ -1776,8 +1777,8 @@ function initPsStatic() {
       plugins:{legend:{display:false},
         tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"top",color:"#002961",
-          font:{weight:"900",size:14,family:"'Barlow Condensed',sans-serif"},formatter:v=>v,
-          padding:{top:3,bottom:3,left:6,right:6},backgroundColor:"rgba(255,255,255,.85)",borderRadius:5}},
+          font:{weight:"900",size:19,family:"'Barlow Condensed',sans-serif"},formatter:v=>v,
+          padding:{top:4,bottom:4,left:7,right:7},backgroundColor:"rgba(255,255,255,.85)",borderRadius:5}},
       animation:{duration:700,easing:"easeOutQuart"}
     }
   });
