@@ -164,7 +164,16 @@
       background: var(--card); border-radius: var(--radius); padding: 15px;
       box-shadow: var(--shadow); border: var(--card-border);
       display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+      position: relative; overflow: hidden;
     }
+    .kpi-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--accent-color, var(--primary));
+    }
+    .kpi-card:has(.kpi-label.accent) { --accent-color: var(--primary2); }
+    .kpi-card:has(.kpi-label.green)  { --accent-color: var(--green); }
+    .kpi-card:has(.kpi-label.red)    { --accent-color: var(--red); }
+    .kpi-card:has(.kpi-label.orange) { --accent-color: var(--orange); }
     .kpi-label {
       display: inline-block; background: var(--primary); color: #fff;
       font-size: 10.5px; font-weight: 800; text-transform: uppercase;
@@ -176,8 +185,9 @@
     .kpi-label.orange  { background: var(--orange); }
     .kpi-value {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(32px, 3.5vw, 52px); font-weight: 900;
-      color: var(--text); line-height: 1; letter-spacing: -.02em;
+      font-size: clamp(34px, 3.6vw, 54px); font-weight: 900;
+      color: var(--accent-color, var(--primary)); line-height: 1; letter-spacing: -.01em;
+      font-variant-numeric: tabular-nums; text-shadow: 0 1px 0 rgba(255,255,255,.4);
     }
     .kpi-row {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
@@ -188,10 +198,20 @@
       background: var(--card); border-radius: var(--radius); padding: 12px 13px;
       box-shadow: var(--shadow); border: var(--card-border);
       display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+      position: relative; overflow: hidden;
     }
+    .kpi-card-sm::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--accent-color, var(--primary));
+    }
+    .kpi-card-sm:has(.kpi-label.accent) { --accent-color: var(--primary2); }
+    .kpi-card-sm:has(.kpi-label.green)  { --accent-color: var(--green); }
+    .kpi-card-sm:has(.kpi-label.red)    { --accent-color: var(--red); }
+    .kpi-card-sm:has(.kpi-label.orange) { --accent-color: var(--orange); }
     .kpi-value-sm {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(24px, 2.5vw, 38px); font-weight: 900; color: var(--text); line-height: 1;
+      font-size: clamp(26px, 2.7vw, 40px); font-weight: 900; color: var(--accent-color, var(--primary)); line-height: 1;
+      font-variant-numeric: tabular-nums; text-shadow: 0 1px 0 rgba(255,255,255,.4);
     }
 
     /* CENTER gauge */
@@ -648,24 +668,24 @@
   <div style="max-width:1400px;margin:0 auto;padding-bottom:4px;">
 
     <!-- KPI CARDS -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px;">
-      <div class="kpi-card" style="border-top:4px solid var(--primary);">
+    <div class="ps2-kpi-grid">
+      <div class="kpi-card" style="--accent-color:var(--primary);">
         <div class="kpi-label">Total Faltantes</div>
         <div class="kpi-value" id="ps2KpiTotal">314</div>
       </div>
-      <div class="kpi-card" style="border-top:4px solid var(--primary2);">
+      <div class="kpi-card" style="--accent-color:var(--primary2);">
         <div class="kpi-label accent">Rotas Afetadas</div>
         <div class="kpi-value" id="ps2KpiRotas">140</div>
       </div>
-      <div class="kpi-card" style="border-top:4px solid var(--orange);">
+      <div class="kpi-card" style="--accent-color:var(--orange);">
         <div class="kpi-label orange">Caminho Estação</div>
         <div class="kpi-value" id="ps2KpiCaminho">226</div>
       </div>
-      <div class="kpi-card" style="border-top:4px solid var(--green);">
+      <div class="kpi-card" style="--accent-color:var(--green);">
         <div class="kpi-label green">Na Estação</div>
         <div class="kpi-value" id="ps2KpiEstacao">88</div>
       </div>
-      <div class="kpi-card" style="border-top:4px solid var(--accent);">
+      <div class="kpi-card" style="--accent-color:var(--primary3);">
         <div class="kpi-label" style="background:var(--primary3)">Volumosos</div>
         <div class="kpi-value" id="ps2KpiVol">2</div>
       </div>
@@ -674,7 +694,7 @@
     <!-- PENDENTES GERAL — gauge + detalhamento -->
     <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;margin-bottom:14px;" class="ps2-top-grid">
       <!-- Gauge card -->
-      <div class="chart-panel" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
+      <div class="chart-panel ps2-panel" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
         <div class="chart-title" style="display:block;text-align:center;width:100%;margin-bottom:10px;">📦 Pendentes Geral</div>
         <canvas id="ps2GaugeCanvas" width="300" height="165" style="max-width:100%;height:auto;"></canvas>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:10px;">
@@ -689,7 +709,7 @@
         </div>
       </div>
       <!-- Detalhamento horizontal bar chart -->
-      <div class="chart-panel" style="margin-bottom:0;">
+      <div class="chart-panel ps2-panel" style="margin-bottom:0;">
         <div class="chart-title" style="display:block;text-align:center;width:100%;">📊 Detalhamento por Localização</div>
         <canvas id="psDetChart" height="100"></canvas>
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -710,7 +730,7 @@
     </div>
 
     <!-- PENDENTES POR ILHA (Ponto) -->
-    <div class="chart-panel" style="margin-bottom:14px;">
+    <div class="chart-panel ps2-panel" style="margin-bottom:14px;">
       <div class="chart-title">🏝️ Pendentes por Ilha</div>
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:separate;border-spacing:6px;min-width:400px;">
@@ -743,7 +763,7 @@
     </div>
 
     <!-- FALTANTES POR ROTA — full width -->
-    <div class="chart-panel" style="margin-bottom:14px;" id="ps2CaptureArea">
+    <div class="chart-panel ps2-panel" style="margin-bottom:14px;" id="ps2CaptureArea">
       <div class="chart-title">📍 Faltantes por Rota (Top 15)</div>
       <canvas id="psRotaChart" height="120"></canvas>
     </div>
@@ -752,7 +772,7 @@
     <div style="display:none"><canvas id="psPontoChart"></canvas><div id="psPontoLegend"></div></div>
 
     <!-- DATA TABLE -->
-    <div class="table-panel">
+    <div class="table-panel ps2-panel">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
         <div class="chart-title" style="margin-bottom:0">📋 Base de Faltantes</div>
         <input id="psSearch" type="text" placeholder="🔍 Buscar em qualquer coluna…"
@@ -1149,9 +1169,10 @@ function renderDashboard(rows) {
         tooltip: { callbacks:{ label:ctx=>`Aderência: ${ctx.raw.toFixed(2).replace(".",",")}%` } },
         datalabels: {
           display: true, anchor:"end", align:"top", color:"#002961",
-          font:{ weight:"900", size:12, family:"'Barlow Condensed',sans-serif" },
+          font:{ weight:"900", size:14, family:"'Barlow Condensed',sans-serif" },
           formatter: v => v.toFixed(1).replace(".",",")+"%",
-          padding: { bottom: 4 }
+          padding: { top:3, bottom:3, left:6, right:6 },
+          backgroundColor: "rgba(255,255,255,.85)", borderRadius: 5
         }
       },
       animation: { duration:700, easing:"easeOutQuart" }
@@ -1282,7 +1303,7 @@ $("reloadBtn").addEventListener("click", loadFromFirebase);
 $("printBtn").addEventListener("click", async () => {
   try {
     setStatus("Gerando imagem…");
-    const canvas = await html2canvas($("captureArea"), { scale:2, backgroundColor:"#eef3fb", useCORS:true, logging:false });
+    const canvas = await html2canvas($("captureArea"), { scale:3, backgroundColor:"#eef3fb", useCORS:true, logging:false });
     const link = document.createElement("a");
     link.download = `auditoria-spa1-${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL("image/png", 1.0);
@@ -1299,7 +1320,7 @@ $("printBtn2").addEventListener("click", async () => {
   try {
     const target = $("ps2FullPanel");
     const canvas = await html2canvas(target, {
-      scale: 2, backgroundColor: "#eef3fb", useCORS: true, logging: false
+      scale: 3, backgroundColor: "#eef3fb", useCORS: true, logging: false
     });
     const link = document.createElement("a");
     link.download = `pos-sorting-spa1-${new Date().toISOString().slice(0,10)}.png`;
@@ -1725,7 +1746,8 @@ function initPsStatic() {
         legend:{display:false},
         tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"right",color:"#002961",
-          font:{weight:"900",size:13,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}
+          font:{weight:"900",size:16,family:"'Barlow Condensed',sans-serif"},formatter:v=>v,
+          padding:{top:4,bottom:4,left:8,right:8},backgroundColor:"rgba(255,255,255,.85)",borderRadius:6}
       },
       animation:{duration:700,easing:"easeOutQuart"}
     }
@@ -1750,11 +1772,12 @@ function initPsStatic() {
         const label = psStaticRotaChart.data.labels[els[0].index];
         psApplyFilter("rota", label);
       },
-      scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:11}}}},
+      scales:{y:{beginAtZero:true,grid:{color:"#f1f5f9"}},x:{grid:{display:false},ticks:{font:{size:12,weight:"700"},color:"#334155"}}},
       plugins:{legend:{display:false},
         tooltip:{callbacks:{footer:()=>"Clique para filtrar"}},
         datalabels:{display:true,anchor:"end",align:"top",color:"#002961",
-          font:{weight:"900",size:11,family:"'Barlow Condensed',sans-serif"},formatter:v=>v}},
+          font:{weight:"900",size:14,family:"'Barlow Condensed',sans-serif"},formatter:v=>v,
+          padding:{top:3,bottom:3,left:6,right:6},backgroundColor:"rgba(255,255,255,.85)",borderRadius:5}},
       animation:{duration:700,easing:"easeOutQuart"}
     }
   });
